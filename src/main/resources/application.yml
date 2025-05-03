@@ -1,0 +1,24 @@
+server:
+  port: 8080
+
+spring:
+  flyway:
+    enabled: true
+  web:
+    locale: pt_BR
+  profiles:
+    active: ${DAILY_PROFILE:dev}
+  jpa:
+    hibernate:
+      ddl-auto: none
+
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+
+logging:
+  level:
+    org.springframework: INFO
+    com.aledguedes: DEBUG

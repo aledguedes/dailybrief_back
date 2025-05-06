@@ -23,7 +23,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 
 @RestController
-@RequestMapping("/posts")
+@RequestMapping("/api/posts")
 @CrossOrigin(origins = "*")
 public class PostController {
 

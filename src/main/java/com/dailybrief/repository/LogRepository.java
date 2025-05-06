@@ -8,7 +8,7 @@ import java.util.List;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface LogRepository extends JpaRepository<Log, Long> {
-    List<Log> findByUser(String user);
+	List<Log> findByCreatedBy(String createdBy);
 
     List<Log> findByTimestampAfter(Instant startDate);
 }

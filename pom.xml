@@ -100,6 +100,13 @@
             <artifactId>jjwt</artifactId>
             <version>0.12.6</version>
         </dependency>
+        
+        <!-- DevTools-->
+        <dependency>
+		    <groupId>org.springframework.boot</groupId>
+		    <artifactId>spring-boot-devtools</artifactId>
+		    <scope>runtime</scope>
+		</dependency>
 
         <!-- Testing -->
         <dependency>

@@ -2,53 +2,72 @@ package com.dailybrief.model;
 
 import lombok.Data;
 import jakarta.persistence.*;
-import java.time.Instant;
+
+import java.sql.Timestamp;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 @Entity
 @Data
+@Table(name = "tbl_post") // Nome da tabela atualizado para "tbl_post"
 public class Post {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ElementCollection
-    @MapKeyColumn(name = "lang")
-    @Column(name = "title")
-    private Map<String, String> title;
-
-    @ElementCollection
-    @MapKeyColumn(name = "lang")
-    @Column(name = "excerpt")
-    private Map<String, String> excerpt;
-
-    @ElementCollection
-    @MapKeyColumn(name = "lang")
-    @Column(name = "content", columnDefinition = "TEXT")
-    private Map<String, String> content;
-
+    @Column(name = "image")
     private String image;
+
+    @Column(name = "author")
     private String author;
 
-    @ElementCollection
-    private List<String> tags;
-
-    private String category; // Ex.: "Technology"
-
-    @ElementCollection
-    @MapKeyColumn(name = "lang")
-    @Column(name = "meta_description")
-    private Map<String, String> metaDescription; // SEO
-
-    @ElementCollection
-    @MapKeyColumn(name = "lang")
-    @Column(name = "affiliate_link")
-    private Map<String, String> affiliateLinks; // Hotmart, ClickBank, Amazon
+    @Column(name = "category")
+    private String category;
 
     @Enumerated(EnumType.STRING)
-    private PostStatus status; // PENDING, APPROVED, REJECTED
+    @Column(name = "status")
+    private PostStatus status;
 
-    private Instant publishedAt;
+    @Column(name = "published_at")
+    private Timestamp publishedAt;
+
+    @Column(name = "read_time")
     private String readTime;
+
+    @ElementCollection
+    @CollectionTable(name = "tbl_post_title", joinColumns = @JoinColumn(name = "post_id"))
+    @MapKeyColumn(name = "lang")
+    @Column(name = "title")
+    private Map<String, String> title = new HashMap<>();
+
+    @ElementCollection
+    @CollectionTable(name = "tbl_post_content", joinColumns = @JoinColumn(name = "post_id"))
+    @MapKeyColumn(name = "lang")
+    @Column(name = "content")
+    private Map<String, String> content = new HashMap<>();
+
+    @ElementCollection
+    @CollectionTable(name = "tbl_post_excerpt", joinColumns = @JoinColumn(name = "post_id"))
+    @MapKeyColumn(name = "lang")
+    @Column(name = "excerpt")
+    private Map<String, String> excerpt = new HashMap<>();
+
+    @ElementCollection
+    @CollectionTable(name = "tbl_post_meta_description", joinColumns = @JoinColumn(name = "post_id"))
+    @MapKeyColumn(name = "lang")
+    @Column(name = "meta_description")
+    private Map<String, String> metaDescription = new HashMap<>();
+
+    @ElementCollection
+    @CollectionTable(name = "tbl_post_affiliate_link", joinColumns = @JoinColumn(name = "post_id"))
+    @MapKeyColumn(name = "lang")
+    @Column(name = "affiliate_link")
+    private Map<String, String> affiliateLinks = new HashMap<>();
+
+    @ElementCollection
+    @CollectionTable(name = "tbl_post_tags", joinColumns = @JoinColumn(name = "post_id"))
+    @Column(name = "tags")
+    private List<String> tags = new ArrayList<>();
 }

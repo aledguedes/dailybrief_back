@@ -5,6 +5,6 @@ import java.time.Instant;
 public record LogResponseDTO(
         Long id,
         String action, // Ex.: "Post #1 aprovado"
-        String user, // Ex.: "admin"
+        String created_by, // Ex.: "admin"
         Instant timestamp) {
 }

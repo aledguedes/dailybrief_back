@@ -11,7 +11,7 @@ import java.util.List;
 @Mapper(componentModel = "spring")
 public interface PostMapper {
     @Mapping(target = "status", ignore = true) // Status é definido no serviço
-    @Mapping(target = "publishedAt", expression = "java(request.publishedAt() != null ? java.time.Instant.parse(request.publishedAt()) : null)")
+    @Mapping(target = "publishedAt", expression = "java(request.publishedAt() != null ? java.sql.Timestamp.from(java.time.Instant.parse(request.publishedAt())) : null)")
     Post toEntity(PostRequestDTO request);
 
     @Mapping(target = "date", expression = "java(post.getPublishedAt() != null ? post.getPublishedAt().toString() : null)")

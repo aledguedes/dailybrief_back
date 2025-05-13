@@ -17,7 +17,7 @@ CREATE TABLE tbl_post (
 CREATE TABLE tbl_post_title (
     post_id BIGINT,
     lang VARCHAR(10),
-    title VARCHAR(255),
+    title VARCHAR(500),
     PRIMARY KEY (post_id, lang),
     FOREIGN KEY (post_id) REFERENCES tbl_post(id)
 );
@@ -25,7 +25,7 @@ CREATE TABLE tbl_post_title (
 CREATE TABLE tbl_post_excerpt (
     post_id BIGINT,
     lang VARCHAR(10),
-    excerpt VARCHAR(255),
+    excerpt TEXT,
     PRIMARY KEY (post_id, lang),
     FOREIGN KEY (post_id) REFERENCES tbl_post(id)
 );
@@ -41,7 +41,7 @@ CREATE TABLE tbl_post_content (
 CREATE TABLE tbl_post_meta_description (
     post_id BIGINT,
     lang VARCHAR(10),
-    meta_description VARCHAR(255),
+    meta_description VARCHAR(500),
     PRIMARY KEY (post_id, lang),
     FOREIGN KEY (post_id) REFERENCES tbl_post(id)
 );
@@ -57,7 +57,6 @@ CREATE TABLE tbl_post_affiliate_link (
 CREATE TABLE tbl_post_tags (
     post_id BIGINT,
     tags VARCHAR(255),
-    PRIMARY KEY (post_id, tags),
     FOREIGN KEY (post_id) REFERENCES tbl_post(id)
 );
 
@@ -68,4 +67,7 @@ CREATE TABLE tbl_log (
     timestamp TIMESTAMP NOT NULL
 );
 
-INSERT INTO TBL_USER (id, email, password) VALUES (1, 'admin@admin.com', '$2a$12$7xVaaik7.m2w2ez7.A4sTupvCmIad.wgXSkOPaAlLid44BJfwahUC');
+-- Dados iniciais
+INSERT INTO tbl_user (id, email, password) VALUES 
+(1, 'admin@dailybrief.com', '$2a$12$7xVaaik7.m2w2ez7.A4sTupvCmIad.wgXSkOPaAlLid44BJfwahUC'),
+(2, 'admin_py@dailybrief.com', '$2a$12$Y.mTzt9L6Jvn/qhyFjREMOha36fs0yp.KSAYrjU1MK74yUaC1F9j2');

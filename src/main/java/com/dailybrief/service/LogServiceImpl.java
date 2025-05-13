@@ -6,6 +6,9 @@ import com.dailybrief.model.Log;
 import com.dailybrief.repository.LogRepository;
 import com.dailybrief.mapper.LogMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
@@ -29,7 +32,9 @@ public class LogServiceImpl implements LogService {
     }
 
     @Override
-    public List<LogResponseDTO> getLogs() {
-        return logMapper.toResponseList(logRepository.findAll());
+    public Page<LogResponseDTO> getLogs(Pageable pageable) {
+        Page<Log> logsPage = logRepository.findAll(pageable);
+        List<LogResponseDTO> logResponseDTOs = logMapper.toResponseList(logsPage.getContent());
+        return new PageImpl<>(logResponseDTOs, pageable, logsPage.getTotalElements());
     }
 }

@@ -1,11 +1,6 @@
 package com.dailybrief.service;
 
-import java.util.List;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
+import com.dailybrief.dto.LocalizedPostResponseDTO;
 import com.dailybrief.dto.PostRequestDTO;
 import com.dailybrief.dto.PostResponseDTO;
 import com.dailybrief.exception.PostNotFoundException;
@@ -13,6 +8,11 @@ import com.dailybrief.mapper.PostMapper;
 import com.dailybrief.model.Post;
 import com.dailybrief.model.PostStatus;
 import com.dailybrief.repository.PostRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 @Service
 public class PostServiceImpl implements PostService {
@@ -39,8 +39,13 @@ public class PostServiceImpl implements PostService {
     }
 
     @Override
-    public List<PostResponseDTO> getAllPosts() {
-        return postMapper.toResponseList(postRepository.findAll());
+    public Page<PostResponseDTO> getAllPosts(Pageable pageable) {
+        return postRepository.findAll(pageable).map(postMapper::toResponse);
+    }
+
+    @Override
+    public Page<LocalizedPostResponseDTO> getAllPostsLocalized(Pageable pageable) {
+        return postRepository.findAll(pageable).map(postMapper::toLocalizedResponse);
     }
 
     @Override
@@ -80,7 +85,7 @@ public class PostServiceImpl implements PostService {
     public PostResponseDTO rejectPost(Long id) {
         Post post = postRepository.findById(id)
                 .orElseThrow(() -> new PostNotFoundException("Post with id " + id + " not found"));
-        post.setStatus(PostStatus.APPROVED);
+        post.setStatus(PostStatus.REJECTED);
         Post savedPost = postRepository.save(post);
         return postMapper.toResponse(savedPost);
     }

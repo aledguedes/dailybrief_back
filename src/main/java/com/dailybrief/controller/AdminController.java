@@ -1,10 +1,11 @@
 package com.dailybrief.controller;
 
-import java.util.List;
-
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -34,6 +35,7 @@ import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/api/admin")
+@CrossOrigin(origins = "*")
 public class AdminController {
 
     @Autowired
@@ -50,18 +52,18 @@ public class AdminController {
 
     @Operation(summary = "Get all logs", description = "Fetches all audit logs in the system")
     @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "List of logs retrieved successfully"),
-        @ApiResponse(responseCode = "401", description = "Unauthorized access")
+            @ApiResponse(responseCode = "200", description = "List of logs retrieved successfully"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized access")
     })
     @GetMapping("/logs")
-    public List<LogResponseDTO> getLogs() {
-        return logService.getLogs();
+    public Page<LogResponseDTO> getLogs(Pageable pageable) {
+        return logService.getLogs(pageable);
     }
 
     @Operation(summary = "Get analytics", description = "Fetches analytics data (e.g., pageviews, affiliate clicks)")
     @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "Analytics data retrieved successfully"),
-        @ApiResponse(responseCode = "401", description = "Unauthorized access")
+            @ApiResponse(responseCode = "200", description = "Analytics data retrieved successfully"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized access")
     })
     @GetMapping("/analytics")
     public AnalyticsDTO getAnalytics() {
@@ -70,9 +72,9 @@ public class AdminController {
 
     @Operation(summary = "Create a new user", description = "Creates a new user and returns the created user's details")
     @ApiResponses({
-        @ApiResponse(responseCode = "201", description = "User created successfully"),
-        @ApiResponse(responseCode = "400", description = "Invalid user data provided"),
-        @ApiResponse(responseCode = "401", description = "Unauthorized access")
+            @ApiResponse(responseCode = "201", description = "User created successfully"),
+            @ApiResponse(responseCode = "400", description = "Invalid user data provided"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized access")
     })
     @PostMapping("/users")
     @ResponseStatus(HttpStatus.CREATED)
@@ -83,19 +85,19 @@ public class AdminController {
 
     @Operation(summary = "Get all users", description = "Fetches all users in the system")
     @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "List of users retrieved successfully"),
-        @ApiResponse(responseCode = "401", description = "Unauthorized access")
+            @ApiResponse(responseCode = "200", description = "List of users retrieved successfully"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized access")
     })
     @GetMapping("/users")
-    public List<UserResponseDTO> getAllUsers() {
-        return userService.getAllUsers();
+    public Page<UserResponseDTO> getAllUsers(Pageable pageable) {
+        return userService.getAllUsers(pageable);
     }
 
     @Operation(summary = "Get a user by ID", description = "Fetches a user by its unique ID")
     @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "User retrieved successfully"),
-        @ApiResponse(responseCode = "401", description = "Unauthorized access"),
-        @ApiResponse(responseCode = "404", description = "User not found")
+            @ApiResponse(responseCode = "200", description = "User retrieved successfully"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized access"),
+            @ApiResponse(responseCode = "404", description = "User not found")
     })
     @GetMapping("/users/{id}")
     public UserResponseDTO getUserById(@Parameter(description = "ID of the user to retrieve") @PathVariable Long id) {
@@ -104,31 +106,32 @@ public class AdminController {
 
     @Operation(summary = "Get all posts", description = "Fetches all posts in the system, including translations in PT, EN, ES")
     @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "List of posts retrieved successfully"),
-        @ApiResponse(responseCode = "401", description = "Unauthorized access")
+            @ApiResponse(responseCode = "200", description = "List of posts retrieved successfully"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized access")
     })
     @GetMapping("/posts")
-    public List<PostResponseDTO> getAllPosts() {
-        return postService.getAllPosts();
+    public Page<PostResponseDTO> getAllPosts(Pageable pageable) {
+        return postService.getAllPosts(pageable);
     }
 
     @Operation(summary = "Update a post", description = "Updates an existing post by its ID, including translations in PT, EN, ES")
     @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "Post updated successfully"),
-        @ApiResponse(responseCode = "400", description = "Invalid post data provided"),
-        @ApiResponse(responseCode = "401", description = "Unauthorized access"),
-        @ApiResponse(responseCode = "404", description = "Post not found")
+            @ApiResponse(responseCode = "200", description = "Post updated successfully"),
+            @ApiResponse(responseCode = "400", description = "Invalid post data provided"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized access"),
+            @ApiResponse(responseCode = "404", description = "Post not found")
     })
     @PutMapping("/posts/{id}")
-    public PostResponseDTO updatePost(@Parameter(description = "ID of the post to update") @PathVariable Long id, @Valid @RequestBody PostRequestDTO postRequest) {
+    public PostResponseDTO updatePost(@Parameter(description = "ID of the post to update") @PathVariable Long id,
+            @Valid @RequestBody PostRequestDTO postRequest) {
         return postService.updatePost(id, postRequest);
     }
 
     @Operation(summary = "Approve a post", description = "Changes the status of a post to APPROVED")
     @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "Post approved successfully"),
-        @ApiResponse(responseCode = "401", description = "Unauthorized access"),
-        @ApiResponse(responseCode = "404", description = "Post not found")
+            @ApiResponse(responseCode = "200", description = "Post approved successfully"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized access"),
+            @ApiResponse(responseCode = "404", description = "Post not found")
     })
     @PostMapping("/posts/{id}/approve")
     public PostResponseDTO approvePost(@Parameter(description = "ID of the post to approve") @PathVariable Long id) {
@@ -137,9 +140,9 @@ public class AdminController {
 
     @Operation(summary = "Reject a post", description = "Changes the status of a post to REJECTED")
     @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "Post rejected successfully"),
-        @ApiResponse(responseCode = "401", description = "Unauthorized access"),
-        @ApiResponse(responseCode = "404", description = "Post not found")
+            @ApiResponse(responseCode = "200", description = "Post rejected successfully"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized access"),
+            @ApiResponse(responseCode = "404", description = "Post not found")
     })
     @PostMapping("/posts/{id}/reject")
     public PostResponseDTO rejectPost(@Parameter(description = "ID of the post to reject") @PathVariable Long id) {
@@ -148,9 +151,9 @@ public class AdminController {
 
     @Operation(summary = "Delete a post", description = "Deletes a post by its ID")
     @ApiResponses({
-        @ApiResponse(responseCode = "204", description = "Post deleted successfully"),
-        @ApiResponse(responseCode = "401", description = "Unauthorized access"),
-        @ApiResponse(responseCode = "404", description = "Post not found")
+            @ApiResponse(responseCode = "204", description = "Post deleted successfully"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized access"),
+            @ApiResponse(responseCode = "404", description = "Post not found")
     })
     @DeleteMapping("/posts/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)

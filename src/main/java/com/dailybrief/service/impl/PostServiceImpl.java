@@ -1,4 +1,4 @@
-package com.dailybrief.service;
+package com.dailybrief.service.impl;
 
 import com.dailybrief.dto.LocalizedPostResponseDTO;
 import com.dailybrief.dto.PostRequestDTO;
@@ -8,6 +8,8 @@ import com.dailybrief.mapper.PostMapper;
 import com.dailybrief.model.Post;
 import com.dailybrief.model.PostStatus;
 import com.dailybrief.repository.PostRepository;
+import com.dailybrief.service.PostService;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -62,7 +64,7 @@ public class PostServiceImpl implements PostService {
                 .orElseThrow(() -> new PostNotFoundException("Post with id " + id + " not found"));
         Post updatedPost = postMapper.toEntity(postRequest);
         updatedPost.setId(id);
-        updatedPost.setStatus(post.getStatus()); // Preserva status
+        updatedPost.setStatus(post.getStatus());
         if (updatedPost.getReadTime() == null) {
             updatedPost.setReadTime(estimateReadTime(postRequest.content().getOrDefault("pt", "")));
         }

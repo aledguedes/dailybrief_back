@@ -1,54 +1,52 @@
 package com.dailybrief.controller;
 
-import com.dailybrief.config.JwtTokenProvider;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
-import java.util.HashMap;
-import java.util.Map;
+import com.dailybrief.dto.AutomationDTO;
+import com.dailybrief.service.AutomationService;
+
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/api/automation")
 public class AutomationController {
 
-    @Autowired
-    private JwtTokenProvider tokenProvider;
+	private final AutomationService service;
 
-    @PostMapping("/trigger")
-    public ResponseEntity<?> triggerAutomation(@RequestHeader("Authorization") String authorizationHeader) {
-        // Extrai o token do cabeçalho Authorization
-        if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
-            return ResponseEntity.status(401).body("Cabeçalho de autorização inválido");
-        }
+	@Autowired
+	public AutomationController(AutomationService service) {
+		this.service = service;
+	}
 
-        String token = authorizationHeader.substring(7); // Remove "Bearer "
-        
-        // Valida o token
-        if (!tokenProvider.validateToken(token)) {
-            return ResponseEntity.status(401).body("Token inválido ou expirado");
-        }
+	@PostMapping("/trigger")
+	public ResponseEntity<String> triggerAutomation(@RequestBody @Valid AutomationDTO dto, HttpServletRequest request) {
+		String authorizationHeader = request.getHeader(HttpHeaders.AUTHORIZATION);
 
-        // Obtém o usuário autenticado (email) do token
-        String username = tokenProvider.getEmailFromToken(token);
-        if (username == null) {
-            return ResponseEntity.status(401).body("Usuário não encontrado no token");
-        }
+		String jwtToken = null;
 
-        // Verifica se o usuário está no contexto de segurança (opcional, já que o JwtAuthenticationFilter já faz isso)
-        String authenticatedUser = SecurityContextHolder.getContext().getAuthentication().getName();
-        if (!username.equals(authenticatedUser)) {
-            return ResponseEntity.status(403).body("Usuário não autorizado");
-        }
+		if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
+			jwtToken = authorizationHeader.substring(7);
+		} else {
+			return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+					.body("Token de autorização Bearer ausente ou inválido.");
+		}
 
-        // Simula o acionamento da automação
-        // Aqui você pode adicionar a lógica para disparar a automação, se necessário.
-        // No nosso caso, o FastAPI já faz a automação, então o Spring Boot apenas confirma o acionamento.
-        Map<String, String> response = new HashMap<>();
-        response.put("message", "Automação acionada com sucesso pelo usuário: " + username);
-        response.put("status", "SUCCESS");
+		try {
+			String response = service.saveAutomationRequest(dto, jwtToken);
+			return ResponseEntity.ok(response);
+		} catch (Exception e) {
 
-        return ResponseEntity.ok(response);
-    }
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+					.body("Erro ao acionar a automação: " + e.getMessage());
+		}
+	}
+
 }

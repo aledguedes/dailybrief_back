@@ -4,7 +4,7 @@ import java.time.Instant;
 
 public record LogResponseDTO(
         Long id,
-        String action, // Ex.: "Post #1 aprovado"
-        String created_by, // Ex.: "admin"
+        String action,
+        String created_by,
         Instant timestamp) {
 }

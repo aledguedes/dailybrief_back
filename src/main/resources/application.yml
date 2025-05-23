@@ -8,9 +8,6 @@ spring:
     locale: pt_BR
   profiles:
     active: ${DAILY_PROFILE:dev}
-  jpa:
-    hibernate:
-      ddl-auto: none
 
 springdoc:
   api-docs:

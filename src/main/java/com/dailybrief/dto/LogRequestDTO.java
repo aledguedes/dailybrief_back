@@ -2,8 +2,9 @@ package com.dailybrief.dto;
 
 import java.time.Instant;
 
+import jakarta.validation.constraints.NotBlank;
+
 public record LogRequestDTO(
-        String action, // Ex.: "Post #1 aprovado"
-        String created_by, // Ex.: "admin"
+        @NotBlank(message = "Action cannot be blank") String action,
         Instant timestamp) {
 }

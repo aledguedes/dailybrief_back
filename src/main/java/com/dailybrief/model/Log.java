@@ -6,18 +6,18 @@ import java.time.Instant;
 
 @Entity
 @Data
-@Table(name = "tbl_log")  // Nome da tabela atualizado para "tbl_log"
+@Table(name = "tbl_log")
 public class Log {
-    @Id
+	@Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "action")
-    private String action; // Ex.: "Post #1 aprovado"
-    
-    @Column(name = "created_by")
-    private String createdBy; // Ex.: "admin"
-    
-    @Column(name = "timestamp")
+    @Column(name = "action", nullable = false)
+    private String action;
+
+    @Column(name = "created_by", nullable = false)
+    private String createdBy;
+
+    @Column(name = "timestamp", nullable = false)
     private Instant timestamp;
 }

@@ -1,18 +1,16 @@
-package com.dailybrief.service;
+package com.dailybrief.service.impl;
 
 import com.dailybrief.dto.LogRequestDTO;
 import com.dailybrief.dto.LogResponseDTO;
+import com.dailybrief.mapper.LogMapper;
 import com.dailybrief.model.Log;
 import com.dailybrief.repository.LogRepository;
-import com.dailybrief.mapper.LogMapper;
+import com.dailybrief.service.LogService;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-
-import java.time.Instant;
-import java.util.List;
 
 @Service
 public class LogServiceImpl implements LogService {
@@ -24,17 +22,16 @@ public class LogServiceImpl implements LogService {
     private LogMapper logMapper;
 
     @Override
-    public LogResponseDTO logAction(LogRequestDTO logRequest) {
+    public LogResponseDTO logAction(LogRequestDTO logRequest, String username) {
         Log log = logMapper.toEntity(logRequest);
-        log.setTimestamp(Instant.now());
+        log.setCreatedBy(username);
+        log.setTimestamp(logRequest.timestamp() != null ? logRequest.timestamp() : java.time.Instant.now());
         Log savedLog = logRepository.save(log);
         return logMapper.toResponse(savedLog);
     }
 
     @Override
     public Page<LogResponseDTO> getLogs(Pageable pageable) {
-        Page<Log> logsPage = logRepository.findAll(pageable);
-        List<LogResponseDTO> logResponseDTOs = logMapper.toResponseList(logsPage.getContent());
-        return new PageImpl<>(logResponseDTOs, pageable, logsPage.getTotalElements());
+        return logRepository.findAll(pageable).map(logMapper::toResponse);
     }
 }

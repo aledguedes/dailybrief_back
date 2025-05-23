@@ -1,7 +1,6 @@
 package com.dailybrief.dto;
 
 import java.util.List;
-import java.util.Map;
 
 public class LocalizedPostResponseDTO {
     private Long id;

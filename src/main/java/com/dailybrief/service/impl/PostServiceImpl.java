@@ -103,7 +103,7 @@ public class PostServiceImpl implements PostService {
 
     private String estimateReadTime(String content) {
         int words = content.split("\\s+").length;
-        int minutes = (int) Math.ceil(words / 200.0); // Média de 200 palavras por minuto
+        int minutes = (int) Math.ceil(words / 200.0);
         return minutes + " min";
     }
 }

@@ -1,4 +1,3 @@
-// LogController.java
 package com.dailybrief.controller;
 
 import com.dailybrief.dto.LogRequestDTO;
@@ -12,19 +11,28 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @RestController
 @RequestMapping("/api/logs")
 @CrossOrigin(origins = "*")
 public class LogController {
 
+    private static final Logger logger = LoggerFactory.getLogger(LogController.class);
+
     @Autowired
     private LogService logService;
 
     @PostMapping
     public ResponseEntity<LogResponseDTO> logAction(@Valid @RequestBody LogRequestDTO logRequest) {
+        logger.info("LogRequestDTO recebido: {}", logRequest);
+
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        String username = auth.getName(); // Extrai 'sub' do token JWT
+        String username = auth.getName();
+
+        logger.debug("Usuário autenticado para o log: {}", username);
+
         LogResponseDTO response = logService.logAction(logRequest, username);
         return ResponseEntity.ok(response);
     }

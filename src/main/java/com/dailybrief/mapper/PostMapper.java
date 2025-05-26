@@ -41,8 +41,12 @@ public class PostMapper {
                 post.getAffiliateLinks(),
                 post.getStatus().name(),
                 post.getPublishedAt() != null ? post.getPublishedAt().toString() : null,
-                post.getReadTime());
+                post.getReadTime(),
+                post.getCreatedAt() != null ? post.getCreatedAt().toString() : null,
+                post.getUpdatedAt() != null ? post.getUpdatedAt().toString() : null
+        );
     }
+
 
     public List<PostResponseDTO> toResponseList(List<Post> posts) {
         return posts.stream().map(this::toResponse).collect(Collectors.toList());
@@ -77,7 +81,7 @@ public class PostMapper {
         String lang = LocaleContextHolder.getLocale().getLanguage();
         return switch (lang) {
             case "en", "pt", "es" -> lang;
-            default -> "pt"; // Padrão
+            default -> "pt";
         };
     }
 }

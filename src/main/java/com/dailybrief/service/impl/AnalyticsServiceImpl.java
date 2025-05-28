@@ -1,6 +1,8 @@
-package com.dailybrief.service;
+package com.dailybrief.service.impl;
 
 import com.dailybrief.dto.AnalyticsDTO;
+import com.dailybrief.service.AnalyticsService;
+
 import org.springframework.stereotype.Service;
 
 @Service

@@ -12,7 +12,7 @@ import org.springframework.data.domain.Pageable;
 
 @RestController
 @RequestMapping("/api/posts")
-@CrossOrigin(origins = "*")
+@CrossOrigin("*")
 public class PostController {
 
     private final PostService postService;

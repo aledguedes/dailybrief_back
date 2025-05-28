@@ -1,9 +1,10 @@
-package com.dailybrief.service;
+package com.dailybrief.service.impl;
 
 import com.dailybrief.dto.LoginRequestDTO;
 import com.dailybrief.dto.LoginResponseDTO;
 import com.dailybrief.model.User;
 import com.dailybrief.repository.UserRepository;
+import com.dailybrief.service.AuthService;
 import com.dailybrief.config.JwtTokenProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;

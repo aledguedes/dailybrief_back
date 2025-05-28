@@ -1,10 +1,14 @@
 package com.dailybrief.dto;
 
 import java.time.Instant;
+import java.util.Map;
 
 public record LogResponseDTO(
-        Long id,
-        String action, // Ex.: "Post #1 aprovado"
-        String created_by, // Ex.: "admin"
-        Instant timestamp) {
+                Long id,
+                String reportId,
+                String level,
+                String action,
+                String created_by,
+                Map<String, Object> details,
+                Instant timestamp) {
 }

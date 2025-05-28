@@ -4,6 +4,7 @@ import lombok.Data;
 import jakarta.persistence.*;
 
 import java.sql.Timestamp;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -70,4 +71,22 @@ public class Post {
   @CollectionTable(name = "tbl_post_tags", joinColumns = @JoinColumn(name = "post_id"))
   @Column(name = "tags")
   private List<String> tags = new ArrayList<>();
+  
+//NOVOS CAMPOS
+ @Column(name = "created_at", updatable = false)
+ private Timestamp createdAt;
+
+ @Column(name = "updated_at")
+ private Timestamp updatedAt;
+
+ @PrePersist
+ protected void onCreate() {
+   createdAt = Timestamp.from(Instant.now());
+   updatedAt = createdAt;
+ }
+
+ @PreUpdate
+ protected void onUpdate() {
+   updatedAt = Timestamp.from(Instant.now());
+ }
 }

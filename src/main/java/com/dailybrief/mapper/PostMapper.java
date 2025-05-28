@@ -3,6 +3,7 @@ package com.dailybrief.mapper;
 import com.dailybrief.dto.LocalizedPostResponseDTO;
 import com.dailybrief.dto.PostRequestDTO;
 import com.dailybrief.dto.PostResponseDTO;
+import com.dailybrief.dto.dashboard.DashboardPostResponseDTO;
 import com.dailybrief.model.Post;
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.stereotype.Component;
@@ -43,10 +44,8 @@ public class PostMapper {
                 post.getPublishedAt() != null ? post.getPublishedAt().toString() : null,
                 post.getReadTime(),
                 post.getCreatedAt() != null ? post.getCreatedAt().toString() : null,
-                post.getUpdatedAt() != null ? post.getUpdatedAt().toString() : null
-        );
+                post.getUpdatedAt() != null ? post.getUpdatedAt().toString() : null);
     }
-
 
     public List<PostResponseDTO> toResponseList(List<Post> posts) {
         return posts.stream().map(this::toResponse).collect(Collectors.toList());
@@ -75,6 +74,16 @@ public class PostMapper {
 
     public List<LocalizedPostResponseDTO> toLocalizedResponseList(List<Post> posts) {
         return posts.stream().map(this::toLocalizedResponse).collect(Collectors.toList());
+    }
+
+    public DashboardPostResponseDTO toDashboardPostResponse(Post post) {
+        return new DashboardPostResponseDTO(
+                post.getId(),
+                post.getImage(),
+                post.getTitle(),
+                post.getExcerpt(),
+                post.getStatus().name(),
+                post.getCategory());
     }
 
     private String getPreferredLanguage() {

@@ -41,6 +41,7 @@ public class SecurityConfig {
 	            .requestMatchers(HttpMethod.POST, "/api/logs").permitAll()
 	            .requestMatchers(HttpMethod.GET, "/api/logs").authenticated()
 	            .requestMatchers("/api/auth/**", "/api/admin/health").permitAll()
+	            .requestMatchers("/api/dashboard/**").authenticated()
 	            .requestMatchers("/api/admin/**").authenticated()
 	            .requestMatchers("/api/posts/**").authenticated()
 	            .requestMatchers("/api/automation/**").authenticated()

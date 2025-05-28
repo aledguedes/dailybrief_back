@@ -1,7 +1,5 @@
 package com.dailybrief.service.impl;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -16,8 +14,6 @@ import com.dailybrief.service.LogService;
 
 @Service
 public class LogServiceImpl implements LogService {
-
-    private static final Logger logger = LoggerFactory.getLogger(LogServiceImpl.class);
 
     @Autowired
     private LogRepository logRepository;

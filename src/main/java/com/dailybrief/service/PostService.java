@@ -1,18 +1,19 @@
 package com.dailybrief.service;
 
+import com.dailybrief.dto.HomepagePostResponseDTO;
+import com.dailybrief.dto.LocalizedPostResponseDTO;
 import com.dailybrief.dto.PostRequestDTO;
 import com.dailybrief.dto.PostResponseDTO;
-import com.dailybrief.dto.LocalizedPostResponseDTO;
-
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 public interface PostService {
+
     PostResponseDTO createPost(PostRequestDTO postRequest);
 
     Page<PostResponseDTO> getAllPosts(Pageable pageable);
 
-    Page<LocalizedPostResponseDTO> getAllPostsLocalized(Pageable pageable);
+    Page<PostResponseDTO> getAllPostsLocalized(Pageable pageable);
 
     PostResponseDTO getPostById(Long id);
 
@@ -23,4 +24,8 @@ public interface PostService {
     PostResponseDTO rejectPost(Long id);
 
     void deletePost(Long id);
+
+    HomepagePostResponseDTO getHomepagePosts(int recentPostsLimit, String lang);
+    
+    LocalizedPostResponseDTO getPublicPostById(Long id, String lang);
 }

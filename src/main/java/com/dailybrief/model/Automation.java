@@ -7,7 +7,7 @@ import java.time.LocalDateTime;
 
 @Entity
 @Data
-@Table(name = "automation_requests")
+@Table(name = "tbl_automation_requests")
 public class Automation {
 
     @Id

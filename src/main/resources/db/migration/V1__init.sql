@@ -1,3 +1,12 @@
+-- migration_script.sql
+
+-- Ativa extensão pg_trgm para índices GIN com LIKE/ILIKE
+CREATE EXTENSION IF NOT EXISTS pg_trgm;
+
+-- ==========================
+-- CRIAÇÃO DAS TABELAS
+-- ==========================
+
 -- Tabela de usuários
 CREATE TABLE tbl_user (
     id SERIAL PRIMARY KEY,
@@ -69,23 +78,53 @@ CREATE TABLE tbl_post_tags (
     FOREIGN KEY (post_id) REFERENCES tbl_post(id) ON DELETE CASCADE
 );
 
--- Logs de ações
+-- Logs de ações (já com os campos de V2)
 CREATE TABLE tbl_log (
     id SERIAL PRIMARY KEY,
     action VARCHAR(255) NOT NULL,
     created_by VARCHAR(255) NOT NULL,
-    timestamp TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+    timestamp TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    report_id VARCHAR(255) NOT NULL,
+    level VARCHAR(50) NOT NULL,
+    details JSONB NOT NULL
 );
 
 -- Requisições de automação
-CREATE TABLE automation_requests (
+CREATE TABLE tbl_automation_requests (
     id SERIAL PRIMARY KEY,
     output_format VARCHAR(50) NOT NULL,
     theme VARCHAR(255) NOT NULL,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
--- Inserção de dados iniciais
+-- ==========================
+-- CRIAÇÃO DOS ÍNDICES OTIMIZADOS
+-- ==========================
+
+-- Índices para tbl_post
+CREATE INDEX idx_post_published_at ON tbl_post (published_at);
+CREATE INDEX idx_post_category ON tbl_post (category);
+CREATE INDEX idx_post_category_published_at ON tbl_post (category, published_at);
+
+-- Índices para tbl_post_tags
+CREATE INDEX idx_post_tags_post_id ON tbl_post_tags (post_id);
+CREATE INDEX idx_post_tags_trgm ON tbl_post_tags USING gin (tags gin_trgm_ops);
+
+-- Índices para tbl_post_title
+CREATE INDEX idx_post_title_trgm ON tbl_post_title USING gin (title gin_trgm_ops);
+CREATE INDEX idx_post_title_lang ON tbl_post_title (lang);
+
+-- Índices para tbl_log
+CREATE INDEX idx_log_timestamp ON tbl_log (timestamp);
+CREATE INDEX idx_log_report_id ON tbl_log (report_id);
+
+-- Índices sugeridos para tbl_automation_requests (se houver buscas frequentes por data ou tema)
+-- CREATE INDEX idx_automation_requests_created_at ON tbl_automation_requests (created_at);
+-- CREATE INDEX idx_automation_requests_theme ON tbl_automation_requests (theme);
+
+-- ==========================
+-- INSERÇÃO DE DADOS INICIAIS
+-- ==========================
 INSERT INTO tbl_user (email, password) VALUES 
 ('admin@dailybrief.com', '$2a$12$7xVaaik7.m2w2ez7.A4sTupvCmIad.wgXSkOPaAlLid44BJfwahUC'),
 ('admin_py@dailybrief.com', '$2a$12$Y.mTzt9L6Jvn/qhyFjREMOha36fs0yp.KSAYrjU1MK74yUaC1F9j2');

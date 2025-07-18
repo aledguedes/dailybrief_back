@@ -26,32 +26,31 @@ public class SecurityConfig {
 
 	@Bean
 	public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-	    http
-	        .csrf(csrf -> csrf.disable())
-	        .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-	        .cors(cors -> cors.configurationSource(request -> {
-	            CorsConfiguration config = new CorsConfiguration();
-	            config.setAllowedOrigins(List.of("http://localhost:3300"));
-	            config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
-	            config.setAllowedHeaders(List.of("*"));
-	            config.setAllowCredentials(true);
-	            return config;
-	        }))
-	        .authorizeHttpRequests(auth -> auth
-	            .requestMatchers(HttpMethod.POST, "/api/logs").permitAll()
-	            .requestMatchers(HttpMethod.GET, "/api/logs").authenticated()
-	            .requestMatchers("/api/auth/**", "/api/admin/health").permitAll()
-	            .requestMatchers("/api/dashboard/**").authenticated()
-	            .requestMatchers("/api/admin/**").authenticated()
-	            .requestMatchers("/api/posts/**").authenticated()
-	            .requestMatchers("/api/automation/**").authenticated()
-	            .requestMatchers("/h2-console/**", "/swagger-ui/**", "/api-docs/**").permitAll()
-	            .anyRequest().permitAll())
-	        .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+		http.csrf(csrf -> csrf.disable())
+				.sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+				.cors(cors -> cors.configurationSource(request -> {
+					CorsConfiguration config = new CorsConfiguration();
+					config.setAllowedOrigins(List.of("http://localhost:3300"));
+					config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
+					config.setAllowedHeaders(List.of("*"));
+					config.setAllowCredentials(true);
+					return config;
+				}))
+				.authorizeHttpRequests(auth -> auth.requestMatchers(HttpMethod.GET, "/api/posts/homepage").permitAll()
+						.requestMatchers(HttpMethod.GET, "/api/posts/public/**").permitAll()
+						.requestMatchers(HttpMethod.POST, "/api/logs").permitAll()
+						.requestMatchers(HttpMethod.GET, "/api/logs").authenticated()
+						.requestMatchers("/api/auth/**", "/api/admin/health").permitAll()
+						.requestMatchers("/api/dashboard/**").authenticated().requestMatchers("/api/admin/**")
+						.authenticated().requestMatchers("/api/posts/**").authenticated()
+						.requestMatchers("/api/automation/**").authenticated()
+						.requestMatchers("/h2-console/**", "/swagger-ui/**", "/api-docs/**").permitAll().anyRequest()
+						.permitAll())
+				.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
-	    http.headers(headers -> headers.frameOptions(frameOptions -> frameOptions.sameOrigin()));
+		http.headers(headers -> headers.frameOptions(frameOptions -> frameOptions.sameOrigin()));
 
-	    return http.build();
+		return http.build();
 	}
 
 	@Bean

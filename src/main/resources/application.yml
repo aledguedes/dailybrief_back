@@ -36,5 +36,6 @@ logging:
 jwt:
   secret: 8/BaML+EoIY8u3UYs1ruYLU6a0LCaQ8ijBPKTKwwbBvZGAH3DroTqwlYPt5L+ZUhJs7y1OMa9bEloHPQg2zuFQ==
 
-
-
+python:
+  api:
+    url: http://localhost:8000

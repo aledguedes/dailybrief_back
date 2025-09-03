@@ -5,6 +5,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import com.dailybrief.dto.AutomationDTO;
+import com.dailybrief.dto.AutomationResponseDTO;
 import com.dailybrief.dto.TrendingTopicSuggestionDTO;
 import com.dailybrief.exception.PostNotFoundException;
 import com.dailybrief.mapper.AutomationMapper;
@@ -16,7 +17,6 @@ import com.dailybrief.repository.AutomationRepository;
 import com.dailybrief.repository.TrendingTopicSuggestionRepository;
 import com.dailybrief.service.AutomationService;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpStatusCodeException;
@@ -34,7 +34,6 @@ public class AutomationServiceImpl implements AutomationService {
 
 	private static final String AUTOMATION_TRIGGER_URL = "http://localhost:8000/trigger-by-id/";
 
-	@Autowired
 	public AutomationServiceImpl(
 			AutomationRepository automationRepository,
 			AutomationMapper automationMapper,
@@ -93,7 +92,7 @@ public class AutomationServiceImpl implements AutomationService {
 			entity.setRelevanceReason(dto.relevanceReason());
 			entity.setSource(dto.source());
 			entity.setUrl(dto.url());
-			entity.setStatus(PostStatus.valueOf(dto.status())); // ⬅️ Usando PostStatus
+			entity.setStatus(PostStatus.valueOf(dto.status()));
 
 			trendingRepository.save(entity);
 		}
@@ -122,9 +121,15 @@ public class AutomationServiceImpl implements AutomationService {
 		entity.setSource(dto.source());
 		entity.setRelevanceReason(dto.relevanceReason());
 		entity.setUrl(dto.url());
-		entity.setStatus(PostStatus.valueOf(dto.status())); // ⬅️ Usando PostStatus
+		entity.setStatus(PostStatus.valueOf(dto.status()));
 
 		trendingRepository.save(entity);
 		return trendingMapper.toDTO(entity);
+	}
+
+	@Override
+	public Optional<AutomationResponseDTO> findById(Long id) {
+		return automationRepository.findById(id)
+				.map(automationMapper::toResponseDto);
 	}
 }

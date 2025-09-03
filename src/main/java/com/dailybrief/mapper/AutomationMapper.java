@@ -1,6 +1,7 @@
 package com.dailybrief.mapper;
 
 import com.dailybrief.dto.AutomationDTO;
+import com.dailybrief.dto.AutomationResponseDTO;
 import com.dailybrief.model.Automation;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -9,5 +10,8 @@ import org.mapstruct.Mapping;
 public interface AutomationMapper {
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "createdAt", expression = "java(java.time.LocalDateTime.now())")
+    @Mapping(target = "updatedAt", expression = "java(java.time.LocalDateTime.now())")
     Automation toEntity(AutomationDTO dto);
+
+    AutomationResponseDTO toResponseDto(Automation entity);
 }

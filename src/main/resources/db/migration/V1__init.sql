@@ -97,6 +97,27 @@ CREATE TABLE tbl_automation_requests (
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
+CREATE TABLE tbl_material_process (
+    id BIGSERIAL PRIMARY KEY,
+    user_id VARCHAR(255) NOT NULL,
+    task_id VARCHAR(255) UNIQUE NOT NULL,
+    theme TEXT,
+    raw_material TEXT,
+    source_urls_json TEXT,
+    content_type VARCHAR(50),
+    status VARCHAR(50) NOT NULL,
+    generated_content_json TEXT,
+    suggested_image_prompt TEXT,
+    error_message TEXT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX idx_tbl_material_process_user_id ON tbl_material_process(user_id);
+CREATE INDEX idx_tbl_material_process_task_id ON tbl_material_process(task_id);
+CREATE INDEX idx_tbl_material_process_status ON tbl_material_process(status);
+
+
 -- ==========================
 -- CRIAÇÃO DOS ÍNDICES OTIMIZADOS
 -- ==========================

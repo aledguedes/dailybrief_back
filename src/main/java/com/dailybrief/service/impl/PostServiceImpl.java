@@ -13,7 +13,6 @@ import com.dailybrief.service.PostService;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -32,7 +31,6 @@ public class PostServiceImpl implements PostService {
     private final PostRepository postRepository;
     private final PostMapper postMapper;
 
-    @Autowired
     public PostServiceImpl(PostRepository postRepository, PostMapper postMapper) {
         this.postRepository = postRepository;
         this.postMapper = postMapper;
@@ -114,27 +112,29 @@ public class PostServiceImpl implements PostService {
 
     @Override
     public HomepagePostResponseDTO getHomepagePosts(int recentPostsLimit, String lang) {
-        logger.info("Buscando posts da homepage com limite: {}. Idioma fornecido: {}, Idioma do LocaleContextHolder: {}", 
+        logger.info(
+                "Buscando posts da homepage com limite: {}. Idioma fornecido: {}, Idioma do LocaleContextHolder: {}",
                 recentPostsLimit, lang, LocaleContextHolder.getLocale().toLanguageTag());
 
         Pageable latestPageable = PageRequest.of(0, 1, Sort.by(
                 Sort.Order.desc("publishedAt").nullsLast(),
-                Sort.Order.desc("createdAt")
-        ));
+                Sort.Order.desc("createdAt")));
         Page<Post> latestPostPage = postRepository.findByStatus(PostStatus.APPROVED, latestPageable);
         LocalizedPostResponseDTO latestPost = null;
         Long latestPostId = null;
 
         if (latestPostPage.hasContent()) {
             Post post = latestPostPage.getContent().get(0);
-            logger.debug("Post mais recente encontrado - ID: {}, Status: {}, Título: {}, PublishedAt: {}, CreatedAt: {}", 
+            logger.debug(
+                    "Post mais recente encontrado - ID: {}, Status: {}, Título: {}, PublishedAt: {}, CreatedAt: {}",
                     post.getId(), post.getStatus(), post.getTitle(), post.getPublishedAt(), post.getCreatedAt());
-            if (post.getTitle() != null && post.getTitle().keySet().stream().anyMatch(key -> key.equalsIgnoreCase("pt"))) {
+            if (post.getTitle() != null
+                    && post.getTitle().keySet().stream().anyMatch(key -> key.equalsIgnoreCase("pt"))) {
                 latestPost = postMapper.toLocalizedResponse(post, lang);
                 latestPostId = post.getId();
                 logger.info("Post ID {} selecionado como latestPost", post.getId());
             } else {
-                logger.warn("Post ID {} ignorado: título não contém chave 'pt' (case-insensitive). Título: {}", 
+                logger.warn("Post ID {} ignorado: título não contém chave 'pt' (case-insensitive). Título: {}",
                         post.getId(), post.getTitle());
             }
         } else {
@@ -144,17 +144,16 @@ public class PostServiceImpl implements PostService {
         final Long finalLatestPostId = latestPostId;
         Pageable recentPageable = PageRequest.of(0, recentPostsLimit, Sort.by(
                 Sort.Order.desc("publishedAt").nullsLast(),
-                Sort.Order.desc("createdAt")
-        ));
+                Sort.Order.desc("createdAt")));
         Page<Post> recentPostsPage = postRepository.findByStatus(PostStatus.APPROVED, recentPageable);
         List<LocalizedPostResponseDTO> recentPosts = recentPostsPage.getContent().stream()
-                .peek(post -> logger.debug("Post recente encontrado - ID: {}, Status: {}, Título: {}", 
+                .peek(post -> logger.debug("Post recente encontrado - ID: {}, Status: {}, Título: {}",
                         post.getId(), post.getStatus(), post.getTitle()))
                 .filter(post -> {
-                    boolean isValid = post.getTitle() != null && 
-                                      post.getTitle().keySet().stream().anyMatch(key -> key.equalsIgnoreCase("pt"));
+                    boolean isValid = post.getTitle() != null &&
+                            post.getTitle().keySet().stream().anyMatch(key -> key.equalsIgnoreCase("pt"));
                     if (!isValid) {
-                        logger.warn("Post ID {} ignorado: título não contém chave 'pt' (case-insensitive). Título: {}", 
+                        logger.warn("Post ID {} ignorado: título não contém chave 'pt' (case-insensitive). Título: {}",
                                 post.getId(), post.getTitle());
                     }
                     return isValid && (finalLatestPostId == null || !post.getId().equals(finalLatestPostId));
@@ -163,12 +162,12 @@ public class PostServiceImpl implements PostService {
                 .limit(recentPostsLimit)
                 .toList();
 
-        logger.info("Retornando latestPost: {}, recentPosts: {} posts", 
+        logger.info("Retornando latestPost: {}, recentPosts: {} posts",
                 latestPost != null ? "ID " + latestPost.id() : "null", recentPosts.size());
 
         return new HomepagePostResponseDTO(latestPost, recentPosts);
     }
-    
+
     @Override
     public LocalizedPostResponseDTO getPublicPostById(Long id, String lang) {
         Post post = postRepository.findById(id)

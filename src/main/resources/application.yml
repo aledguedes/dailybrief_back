@@ -23,8 +23,10 @@ logging:
     name: logs/dailybrief_spring_boot.log # Define o caminho e nome do arquivo de log
   pattern:
     file: "%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level [%thread] %logger{36} - %msg%n" # Padrão de formato para o arquivo
+
 jwt:
   secret: 8/BaML+EoIY8u3UYs1ruYLU6a0LCaQ8ijBPKTKwwbBvZGAH3DroTqwlYPt5L+ZUhJs7y1OMa9bEloHPQg2zuFQ==
 
-
-
+python:
+  api:
+    base-url: http://localhost:8000

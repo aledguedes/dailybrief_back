@@ -77,12 +77,15 @@ CREATE TABLE tbl_log (
     timestamp TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
--- Requisições de automação
-CREATE TABLE automation_requests (
-    id SERIAL PRIMARY KEY,
-    output_format VARCHAR(50) NOT NULL,
-    theme VARCHAR(255) NOT NULL,
-    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+-- Tabela de tarefas de automação
+CREATE TABLE tbl_trigger_tasks (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    trigger_id UUID,
+    task_id VARCHAR(255) UNIQUE NOT NULL,
+    message VARCHAR(255),
+    status VARCHAR(50) NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Inserção de dados iniciais

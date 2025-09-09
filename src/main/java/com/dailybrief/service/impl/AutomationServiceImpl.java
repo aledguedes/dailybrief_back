@@ -32,7 +32,7 @@ public class AutomationServiceImpl implements AutomationService {
     @Override
     public Mono<Void> triggerByUrl(String url) {
         return webClient.post()
-                .uri("/trigger-by-url")
+                .uri("/api/trigger-by-url")
                 .bodyValue(new TriggerByUrlRequestDTO(url))
                 .retrieve()
                 .bodyToMono(Void.class);

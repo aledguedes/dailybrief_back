@@ -13,7 +13,8 @@ public interface AutomationService {
 
     Mono<TaskResultDTO> getTaskResult(String taskId);
 
-    Mono<Void> triggerMultipleUrls(List<String> urls);
+    Mono<Void> triggerMultipleUrls(List<String> urls, String token, String userId, String theme,
+            String outputFormat);
 
     Mono<TriggerResponseDTO> triggerByText(String text);
 

@@ -5,13 +5,17 @@ import com.dailybrief.model.TriggerTask;
 import com.dailybrief.mapper.TriggerTaskMapper;
 import com.dailybrief.repository.TriggerTaskRepository;
 import com.dailybrief.service.AutomationService;
+
+import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 import reactor.core.publisher.Flux;
 import reactor.core.scheduler.Schedulers;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -49,10 +53,19 @@ public class AutomationServiceImpl implements AutomationService {
     }
 
     @Override
-    public Mono<Void> triggerMultipleUrls(List<String> urls) {
+    public Mono<Void> triggerMultipleUrls(List<String> urls, String token, String userId, String theme,
+            String outputFormat) {
+        // Crie um objeto que corresponda à estrutura esperada pelo Python
+        Map<String, Object> requestBody = new HashMap<>();
+        requestBody.put("urls", urls);
+        requestBody.put("user_id", userId);
+        requestBody.put("theme", theme);
+        requestBody.put("output_format", outputFormat);
+
         return webClient.post()
-                .uri("/trigger-multiple-urls")
-                .bodyValue(new AutomationMultipleUrlsRequestDTO(urls))
+                .uri("/api/trigger-multiple-urls")
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
+                .bodyValue(requestBody) // Use o mapa com todos os campos
                 .retrieve()
                 .bodyToMono(Void.class);
     }
@@ -111,8 +124,8 @@ public class AutomationServiceImpl implements AutomationService {
     @Override
     public Mono<TriggerResponseDTO> extractFromUrls(List<String> urls) {
         return webClient.post()
-                .uri("/extract-from-urls")
-                .bodyValue(new AutomationMultipleUrlsRequestDTO(urls))
+                .uri("/api/extract-from-urls")
+                .bodyValue(Map.of("urls", urls))
                 .retrieve()
                 .bodyToMono(TriggerResponseDTO.class)
                 .flatMap(responseDTO -> {

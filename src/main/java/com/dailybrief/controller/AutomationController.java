@@ -8,6 +8,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Mono;
 import reactor.core.publisher.Flux;
@@ -56,8 +57,19 @@ public class AutomationController {
         @PostMapping("/trigger-multiple-urls")
         @ResponseStatus(HttpStatus.ACCEPTED)
         public Mono<ResponseEntity<String>> triggerMultipleUrls(
-                        @Valid @RequestBody AutomationMultipleUrlsRequestDTO request) {
-                return automationService.triggerMultipleUrls(request.urls())
+                        @RequestHeader("Authorization") String authorizationHeader,
+                        @Valid @RequestBody AutomationMultipleUrlsRequestDTO request,
+                        Authentication authentication) {
+
+                String token = authorizationHeader.replace("Bearer ", "");
+                String userId = authentication.getName();
+
+                return automationService.triggerMultipleUrls(
+                                request.urls(),
+                                token,
+                                userId,
+                                request.theme(),
+                                request.outputFormat())
                                 .thenReturn(new ResponseEntity<>(
                                                 "Processo de automação para múltiplas URLs iniciado em segundo plano.",
                                                 HttpStatus.ACCEPTED));

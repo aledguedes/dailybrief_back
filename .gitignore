@@ -31,3 +31,4 @@ build/
 
 ### VS Code ###
 .vscode/
+logs/dailybrief_spring_boot.log

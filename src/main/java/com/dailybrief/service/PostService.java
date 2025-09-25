@@ -2,6 +2,11 @@ package com.dailybrief.service;
 
 import com.dailybrief.dto.PostRequestDTO;
 import com.dailybrief.dto.PostResponseDTO;
+import com.dailybrief.dto.python.FinalPostSubmissionRequestDTO;
+import com.dailybrief.model.Post;
+
+import reactor.core.publisher.Mono;
+
 import com.dailybrief.dto.LocalizedPostResponseDTO;
 
 import org.springframework.data.domain.Page;
@@ -23,4 +28,6 @@ public interface PostService {
     PostResponseDTO rejectPost(Long id);
 
     void deletePost(Long id);
+
+    Mono<Post> saveGeneratedPost(FinalPostSubmissionRequestDTO requestDTO);
 }

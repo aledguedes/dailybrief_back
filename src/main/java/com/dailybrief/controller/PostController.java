@@ -2,9 +2,13 @@ package com.dailybrief.controller;
 
 import com.dailybrief.dto.PostRequestDTO;
 import com.dailybrief.dto.PostResponseDTO;
+import com.dailybrief.dto.python.FinalPostSubmissionRequestDTO;
 import com.dailybrief.dto.LocalizedPostResponseDTO;
 import com.dailybrief.service.PostService;
-import org.springframework.beans.factory.annotation.Autowired;
+
+import reactor.core.publisher.Mono;
+
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.data.domain.Page;
@@ -17,7 +21,6 @@ public class PostController {
 
     private final PostService postService;
 
-    @Autowired
     public PostController(PostService postService) {
         this.postService = postService;
     }
@@ -62,5 +65,11 @@ public class PostController {
     public ResponseEntity<Void> deletePost(@PathVariable Long id) {
         postService.deletePost(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/submit-final-post")
+    public Mono<ResponseEntity<Void>> submitFinalPost(@RequestBody FinalPostSubmissionRequestDTO requestDTO) {
+        return postService.saveGeneratedPost(requestDTO)
+                .map(savedPost -> new ResponseEntity<>(HttpStatus.CREATED));
     }
 }

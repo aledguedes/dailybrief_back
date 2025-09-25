@@ -3,6 +3,7 @@ package com.dailybrief.service.impl;
 import com.dailybrief.dto.LocalizedPostResponseDTO;
 import com.dailybrief.dto.PostRequestDTO;
 import com.dailybrief.dto.PostResponseDTO;
+import com.dailybrief.dto.python.FinalPostSubmissionRequestDTO;
 import com.dailybrief.exception.PostNotFoundException;
 import com.dailybrief.mapper.PostMapper;
 import com.dailybrief.model.Post;
@@ -10,7 +11,8 @@ import com.dailybrief.model.PostStatus;
 import com.dailybrief.repository.PostRepository;
 import com.dailybrief.service.PostService;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import reactor.core.publisher.Mono;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.data.domain.Page;
@@ -22,7 +24,6 @@ public class PostServiceImpl implements PostService {
     private final PostRepository postRepository;
     private final PostMapper postMapper;
 
-    @Autowired
     public PostServiceImpl(PostRepository postRepository, PostMapper postMapper) {
         this.postRepository = postRepository;
         this.postMapper = postMapper;
@@ -99,6 +100,14 @@ public class PostServiceImpl implements PostService {
             throw new PostNotFoundException("Post with id " + id + " not found");
         }
         postRepository.deleteById(id);
+    }
+
+    @Override
+    public Mono<Post> saveGeneratedPost(FinalPostSubmissionRequestDTO requestDTO) {
+        return Mono.fromCallable(() -> {
+            Post post = postMapper.toEntityFromFinalPostDTO(requestDTO);
+            return postRepository.save(post);
+        });
     }
 
     private String estimateReadTime(String content) {

@@ -1,74 +1,134 @@
 package com.dailybrief.service.impl;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Service;
-import org.springframework.web.client.HttpStatusCodeException;
-import org.springframework.web.client.ResourceAccessException;
-import org.springframework.web.client.RestTemplate;
-
-import com.dailybrief.dto.AutomationDTO;
-import com.dailybrief.mapper.AutomationMapper;
-import com.dailybrief.model.Automation;
-import com.dailybrief.repository.AutomationRepository;
+import com.dailybrief.dto.python.*;
 import com.dailybrief.service.AutomationService;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.http.HttpHeaders;
+import org.springframework.stereotype.Service;
+import org.springframework.web.reactive.function.client.WebClient;
+import reactor.core.publisher.Mono;
 
 @Service
 public class AutomationServiceImpl implements AutomationService {
 
-	private final AutomationRepository repository;
-	private final AutomationMapper mapper;
-	private final RestTemplate restTemplate;
+	private final WebClient pythonWebClient;
 
-	private static final String AUTOMATION_TRIGGER_URL = "http://localhost:8000/trigger-by-id/";
-
-	@Autowired
-	public AutomationServiceImpl(AutomationRepository repository, AutomationMapper mapper) {
-		this.repository = repository;
-		this.mapper = mapper;
-		this.restTemplate = new RestTemplate();
+	public AutomationServiceImpl(@Qualifier("pythonWebClient") WebClient pythonWebClient) {
+		this.pythonWebClient = pythonWebClient;
 	}
 
 	@Override
-	public String saveAutomationRequest(AutomationDTO dto, String jwtToken) {
-		Automation entity = mapper.toEntity(dto);
-
-		System.out.println("CHEGANDO NO SERVICE: " + entity.getOutputFormat());
-		System.out.println("CHEGANDO NO SERVICE THEME: " + entity.getTheme());
-
-		Long id = repository.save(entity).getId();
-
-		String url = AUTOMATION_TRIGGER_URL + id;
-
-		HttpHeaders headers = new HttpHeaders();
-
-		headers.set(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE);
-
-		headers.set(HttpHeaders.AUTHORIZATION, "Bearer " + jwtToken);
-
-		HttpEntity<Void> requestEntity = new HttpEntity<>(headers);
-
-		try {
-
-			ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.GET, requestEntity, String.class);
-
-			return response.getBody();
-		} catch (HttpStatusCodeException e) {
-
-			throw new RuntimeException("Erro ao chamar serviço externo (HTTP Status " + e.getStatusCode() + "): "
-					+ e.getResponseBodyAsString(), e);
-		} catch (ResourceAccessException e) {
-
-			throw new RuntimeException(
-					"Erro ao acessar o serviço externo (conexão recusada ou timeout): " + e.getMessage(), e);
-		} catch (Exception e) {
-
-			throw new RuntimeException("Erro inesperado ao chamar o serviço externo: " + e.getMessage(), e);
-		}
+	public Mono<TriggerResponseDTO> triggerByUrl(TriggerByUrlRequestDTO requestDTO, String auth_token) {
+		return pythonWebClient.post()
+				.uri("/api/trigger-by-url")
+				.header(HttpHeaders.AUTHORIZATION, "Bearer " + auth_token)
+				.body(Mono.just(requestDTO), TriggerByUrlRequestDTO.class)
+				.retrieve()
+				.bodyToMono(TriggerResponseDTO.class);
 	}
 
+	@Override
+	public Mono<TriggerResponseDTO> triggerByText(TriggerByTextRequestDTO requestDTO, String auth_token) {
+		return pythonWebClient.post()
+				.uri("/api/trigger-by-text")
+				.header(HttpHeaders.AUTHORIZATION, "Bearer " + auth_token)
+				.body(Mono.just(requestDTO), TriggerByTextRequestDTO.class)
+				.retrieve()
+				.bodyToMono(TriggerResponseDTO.class);
+	}
+
+	@Override
+	public Mono<TriggerResponseDTO> triggerMultipleUrls(AutomationTriggerRequestDTO requestDTO, String auth_token) {
+		return pythonWebClient.post()
+				.uri("/api/trigger-multiple-urls")
+				.header(HttpHeaders.AUTHORIZATION, "Bearer " + auth_token)
+				.body(Mono.just(requestDTO), AutomationTriggerRequestDTO.class)
+				.retrieve()
+				.bodyToMono(TriggerResponseDTO.class);
+	}
+
+	@Override
+	public Mono<TriggerResponseDTO> triggerById(String id, String auth_token) {
+		return pythonWebClient.get()
+				.uri("/api/trigger-by-id/{id}", id)
+				.header(HttpHeaders.AUTHORIZATION, "Bearer " + auth_token)
+				.retrieve()
+				.bodyToMono(TriggerResponseDTO.class);
+	}
+
+	@Override
+	public Mono<GenerateContentResponseDTO> generateContent(ContentGenerationRequestDTO requestDTO, String auth_token) {
+		return pythonWebClient.post()
+				.uri("/api/generate-content")
+				.header(HttpHeaders.AUTHORIZATION, "Bearer " + auth_token)
+				.body(Mono.just(requestDTO), ContentGenerationRequestDTO.class)
+				.retrieve()
+				.bodyToMono(GenerateContentResponseDTO.class);
+	}
+
+	@Override
+	public Mono<GenerateContentResponseDTO> generateContentManual(ContentGenerationRequestDTO requestDTO,
+			String auth_token) {
+		return pythonWebClient.post()
+				.uri("/api/generate-content-manual")
+				.header(HttpHeaders.AUTHORIZATION, "Bearer " + auth_token)
+				.body(Mono.just(requestDTO), ContentGenerationRequestDTO.class)
+				.retrieve()
+				.bodyToMono(GenerateContentResponseDTO.class);
+	}
+
+	@Override
+	public Mono<GenerateContentResponseDTO> generateByTaskId(String taskId, String auth_token) {
+		return pythonWebClient.post()
+				.uri("/api/generate/{task_id}", taskId)
+				.header(HttpHeaders.AUTHORIZATION, "Bearer " + auth_token)
+				.retrieve()
+				.bodyToMono(GenerateContentResponseDTO.class);
+	}
+
+	@Override
+	public Mono<GenerateContentResponseDTO> getTaskResult(String taskId, String auth_token) {
+		return pythonWebClient.get()
+				.uri("/api/get-task-result?task_id={taskId}", taskId)
+				.header(HttpHeaders.AUTHORIZATION, "Bearer " + auth_token)
+				.retrieve()
+				.bodyToMono(GenerateContentResponseDTO.class);
+	}
+
+	@Override
+	public Mono<GenerateContentResponseDTO> generateImage(ContentGenerationRequestDTO requestDTO, String auth_token) {
+		return pythonWebClient.post()
+				.uri("/api/generate-image")
+				.header(HttpHeaders.AUTHORIZATION, "Bearer " + auth_token)
+				.body(Mono.just(requestDTO), ContentGenerationRequestDTO.class)
+				.retrieve()
+				.bodyToMono(GenerateContentResponseDTO.class);
+	}
+
+	@Override
+	public Mono<RawMaterialsListResponseDTO> listUserMaterials(String auth_token) {
+		return pythonWebClient.get()
+				.uri("/api/list-user-materials")
+				.header(HttpHeaders.AUTHORIZATION, "Bearer " + auth_token)
+				.retrieve()
+				.bodyToMono(RawMaterialsListResponseDTO.class);
+	}
+
+	@Override
+	public Mono<RawMaterialResponseDTO> getRawMaterial(String rawMaterialId, String auth_token) {
+		return pythonWebClient.get()
+				.uri("/api/raw-material/{raw_material_id}", rawMaterialId)
+				.header(HttpHeaders.AUTHORIZATION, "Bearer " + auth_token)
+				.retrieve()
+				.bodyToMono(RawMaterialResponseDTO.class);
+	}
+
+	@Override
+	public Mono<RawMaterialsListResponseDTO> getRawMaterialsByTask(String taskId, String auth_token) {
+		return pythonWebClient.get()
+				.uri("/api/raw-materials-by-task/{task_id}", taskId)
+				.header(HttpHeaders.AUTHORIZATION, "Bearer " + auth_token)
+				.retrieve()
+				.bodyToMono(RawMaterialsListResponseDTO.class);
+	}
 }

@@ -1,14 +1,18 @@
 package com.dailybrief.mapper;
 
 import com.dailybrief.dto.LocalizedPostResponseDTO;
+import com.dailybrief.dto.python.MultilingualContentDTO;
 import com.dailybrief.dto.PostRequestDTO;
 import com.dailybrief.dto.PostResponseDTO;
 import com.dailybrief.dto.dashboard.DashboardPostResponseDTO;
+import com.dailybrief.dto.python.FinalPostSubmissionRequestDTO;
 import com.dailybrief.model.Post;
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Component
@@ -84,6 +88,28 @@ public class PostMapper {
                 post.getExcerpt(),
                 post.getStatus().name(),
                 post.getCategory());
+    }
+
+    public Post toEntityFromFinalPostDTO(FinalPostSubmissionRequestDTO dto) {
+        Post post = new Post();
+        // Mapeamento dos campos de conteúdo multilíngue
+        if (dto.generatedContent() != null) {
+            for (Map.Entry<String, MultilingualContentDTO> entry : dto.generatedContent().entrySet()) {
+                String lang = entry.getKey();
+                MultilingualContentDTO content = entry.getValue();
+
+                post.getTitle().put(lang, content.title());
+                post.getContent().put(lang, content.content());
+                post.getExcerpt().put(lang, content.excerpt());
+                post.getMetaDescription().put(lang, content.metaDescription());
+            }
+        }
+
+        // Mapeamento de outros campos
+        post.setTags(dto.tags() != null ? new ArrayList<>(dto.tags()) : new ArrayList<>());
+        post.setCategory(dto.category());
+
+        return post;
     }
 
     private String getPreferredLanguage() {

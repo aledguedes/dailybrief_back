@@ -17,7 +17,9 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(DataIntegrityViolationException.class)
     public ResponseEntity<String> handleDataIntegrityViolation(DataIntegrityViolationException ex) {
-        return new ResponseEntity<>("Database error: " + ex.getRootCause().getMessage(), HttpStatus.BAD_REQUEST);
+        Throwable rootCause = ex.getRootCause();
+        String errorMessage = rootCause != null ? rootCause.getMessage() : ex.getMessage();
+        return new ResponseEntity<>("Database error: " + errorMessage, HttpStatus.BAD_REQUEST);
     }
 
     @ExceptionHandler(Exception.class)

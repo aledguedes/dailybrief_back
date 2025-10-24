@@ -17,7 +17,7 @@ public class JwtTokenProvider {
     private String secretKeyBase64;
 
     private final SecretKey secretKey;
-    private final long validityInMilliseconds = 3600000; // 1 hora
+    private final long validityInMilliseconds = 3600000 * 24; // 7 dias
 
     public JwtTokenProvider(@Value("${jwt.secret}") String secretKeyBase64) {
         this.secretKeyBase64 = secretKeyBase64;

@@ -9,14 +9,20 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID; // Adicionar o import para UUID
 
 @Entity
 @Data
 @Table(name = "tbl_post")
 public class Post {
+  // 1. Alteração da PK para usar String/UUID
   @Id
-  @GeneratedValue(strategy = GenerationType.IDENTITY)
-  private Long id;
+  @Column(name = "id", length = 36) // UUIDs são tipicamente 36 caracteres.
+  private String id; // O tipo String será mapeado para VARCHAR ou TEXT no PostgreSQL.
+
+  // Removendo @GeneratedValue, pois a geração deve ser manual (via
+  // UUID.randomUUID().toString()) ou através de um tipo UUID nativo do JPA no
+  // futuro, se for o caso.
 
   @Column(name = "image")
   private String image;
@@ -71,22 +77,27 @@ public class Post {
   @CollectionTable(name = "tbl_post_tags", joinColumns = @JoinColumn(name = "post_id"))
   @Column(name = "tags")
   private List<String> tags = new ArrayList<>();
-  
-//NOVOS CAMPOS
- @Column(name = "created_at", updatable = false)
- private Timestamp createdAt;
 
- @Column(name = "updated_at")
- private Timestamp updatedAt;
+  // CAMPOS DE DATA/HORA
+  @Column(name = "created_at", updatable = false)
+  private Timestamp createdAt;
 
- @PrePersist
- protected void onCreate() {
-   createdAt = Timestamp.from(Instant.now());
-   updatedAt = createdAt;
- }
+  @Column(name = "updated_at")
+  private Timestamp updatedAt;
 
- @PreUpdate
- protected void onUpdate() {
-   updatedAt = Timestamp.from(Instant.now());
- }
+  // 2. Ajuste na geração do ID
+  @PrePersist
+  protected void onCreate() {
+    if (id == null) {
+      // Garante que um UUID seja gerado antes de salvar
+      id = UUID.randomUUID().toString();
+    }
+    createdAt = Timestamp.from(Instant.now());
+    updatedAt = createdAt;
+  }
+
+  @PreUpdate
+  protected void onUpdate() {
+    updatedAt = Timestamp.from(Instant.now());
+  }
 }

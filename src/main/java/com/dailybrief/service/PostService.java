@@ -2,10 +2,6 @@ package com.dailybrief.service;
 
 import com.dailybrief.dto.PostRequestDTO;
 import com.dailybrief.dto.PostResponseDTO;
-import com.dailybrief.dto.python.FinalPostSubmissionRequestDTO;
-import com.dailybrief.model.Post;
-
-import reactor.core.publisher.Mono;
 
 import com.dailybrief.dto.LocalizedPostResponseDTO;
 
@@ -29,5 +25,5 @@ public interface PostService {
 
     void deletePost(Long id);
 
-    Mono<Post> saveGeneratedPost(FinalPostSubmissionRequestDTO requestDTO);
+    // Mono<Post> saveGeneratedPost(FinalPostSubmissionRequestDTO requestDTO);
 }

@@ -3,15 +3,12 @@ package com.dailybrief.service.impl;
 import com.dailybrief.dto.LocalizedPostResponseDTO;
 import com.dailybrief.dto.PostRequestDTO;
 import com.dailybrief.dto.PostResponseDTO;
-import com.dailybrief.dto.python.FinalPostSubmissionRequestDTO;
 import com.dailybrief.exception.PostNotFoundException;
 import com.dailybrief.mapper.PostMapper;
 import com.dailybrief.model.Post;
 import com.dailybrief.model.PostStatus;
 import com.dailybrief.repository.PostRepository;
 import com.dailybrief.service.PostService;
-
-import reactor.core.publisher.Mono;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -102,13 +99,14 @@ public class PostServiceImpl implements PostService {
         postRepository.deleteById(id);
     }
 
-    @Override
-    public Mono<Post> saveGeneratedPost(FinalPostSubmissionRequestDTO requestDTO) {
-        return Mono.fromCallable(() -> {
-            Post post = postMapper.toEntityFromFinalPostDTO(requestDTO);
-            return postRepository.save(post);
-        });
-    }
+    // @Override
+    // public Mono<Post> saveGeneratedPost(FinalPostSubmissionRequestDTO requestDTO)
+    // {
+    // return Mono.fromCallable(() -> {
+    // Post post = postMapper.toEntityFromFinalPostDTO(requestDTO);
+    // return postRepository.save(post);
+    // });
+    // }
 
     private String estimateReadTime(String content) {
         int words = content.split("\\s+").length;

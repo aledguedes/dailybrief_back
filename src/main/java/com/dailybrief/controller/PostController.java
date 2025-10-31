@@ -38,27 +38,28 @@ public class PostController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<PostResponseDTO> getPostById(@PathVariable Long id) {
+    public ResponseEntity<PostResponseDTO> getPostById(@PathVariable String id) {
         return ResponseEntity.ok(postService.getPostById(id));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<PostResponseDTO> updatePost(@PathVariable Long id, @RequestBody PostRequestDTO postRequest) {
+    public ResponseEntity<PostResponseDTO> updatePost(@PathVariable String id,
+            @RequestBody PostRequestDTO postRequest) {
         return ResponseEntity.ok(postService.updatePost(id, postRequest));
     }
 
     @PatchMapping("/{id}/approve")
-    public ResponseEntity<PostResponseDTO> approvePost(@PathVariable Long id) {
+    public ResponseEntity<PostResponseDTO> approvePost(@PathVariable String id) {
         return ResponseEntity.ok(postService.approvePost(id));
     }
 
     @PatchMapping("/{id}/reject")
-    public ResponseEntity<PostResponseDTO> rejectPost(@PathVariable Long id) {
+    public ResponseEntity<PostResponseDTO> rejectPost(@PathVariable String id) {
         return ResponseEntity.ok(postService.rejectPost(id));
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deletePost(@PathVariable Long id) {
+    public ResponseEntity<Void> deletePost(@PathVariable String id) {
         postService.deletePost(id);
         return ResponseEntity.noContent().build();
     }

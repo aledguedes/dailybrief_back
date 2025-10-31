@@ -49,7 +49,7 @@ public class PostServiceImpl implements PostService {
     }
 
     @Override
-    public PostResponseDTO getPostById(Long id) {
+    public PostResponseDTO getPostById(String id) {
         Post post = postRepository.findById(id)
                 .orElseThrow(() -> new PostNotFoundException("Post with id " + id + " not found"));
         return postMapper.toResponse(post);
@@ -57,7 +57,7 @@ public class PostServiceImpl implements PostService {
 
     @Override
     @Transactional
-    public PostResponseDTO updatePost(Long id, PostRequestDTO postRequest) {
+    public PostResponseDTO updatePost(String id, PostRequestDTO postRequest) {
         Post post = postRepository.findById(id)
                 .orElseThrow(() -> new PostNotFoundException("Post with id " + id + " not found"));
         Post updatedPost = postMapper.toEntity(postRequest);
@@ -72,7 +72,7 @@ public class PostServiceImpl implements PostService {
 
     @Override
     @Transactional
-    public PostResponseDTO approvePost(Long id) {
+    public PostResponseDTO approvePost(String id) {
         Post post = postRepository.findById(id)
                 .orElseThrow(() -> new PostNotFoundException("Post with id " + id + " not found"));
         post.setStatus(PostStatus.APPROVED);
@@ -82,7 +82,7 @@ public class PostServiceImpl implements PostService {
 
     @Override
     @Transactional
-    public PostResponseDTO rejectPost(Long id) {
+    public PostResponseDTO rejectPost(String id) {
         Post post = postRepository.findById(id)
                 .orElseThrow(() -> new PostNotFoundException("Post with id " + id + " not found"));
         post.setStatus(PostStatus.REJECTED);
@@ -92,7 +92,7 @@ public class PostServiceImpl implements PostService {
 
     @Override
     @Transactional
-    public void deletePost(Long id) {
+    public void deletePost(String id) {
         if (!postRepository.existsById(id)) {
             throw new PostNotFoundException("Post with id " + id + " not found");
         }

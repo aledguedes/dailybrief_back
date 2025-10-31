@@ -5,7 +5,7 @@ import jakarta.persistence.*;
 
 @Entity
 @Data
-@Table(name = "status")
+@Table(name = "tbl_status")
 public class Status {
 
     @Id

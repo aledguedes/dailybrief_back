@@ -53,24 +53,24 @@ public class PostMapper {
 
     public LocalizedPostResponseDTO toLocalizedResponse(Post post) {
         String lang = getPreferredLanguage();
-        LocalizedPostResponseDTO dto = new LocalizedPostResponseDTO();
-        dto.setId(post.getId());
-        dto.setTitle(post.getTitle().getOrDefault(lang, post.getTitle().getOrDefault("pt", "")));
-        dto.setExcerpt(post.getExcerpt().getOrDefault(lang, post.getExcerpt().getOrDefault("pt", "")));
-        dto.setContent(post.getContent().getOrDefault(lang, post.getContent().getOrDefault("pt", "")));
-        dto.setImage(post.getImage());
-        dto.setAuthor(post.getAuthor());
-        dto.setTags(post.getTags());
-        dto.setCategory(post.getCategory());
-        dto.setMetaDescription(
-                post.getMetaDescription().getOrDefault(lang, post.getMetaDescription().getOrDefault("pt", "")));
-        dto.setAffiliateLinks(
-                post.getAffiliateLinks().getOrDefault(lang, post.getAffiliateLinks().getOrDefault("pt", "")));
-        dto.setStatus(post.getStatus().name());
-        dto.setDate(post.getPublishedAt() != null ? post.getPublishedAt().toString() : null);
-        dto.setReadTime(post.getReadTime());
-        return dto;
+
+        return new LocalizedPostResponseDTO(
+            post.getId(),
+            post.getTitle().getOrDefault(lang, post.getTitle().getOrDefault("pt", "")),
+            post.getExcerpt().getOrDefault(lang, post.getExcerpt().getOrDefault("pt", "")),
+            post.getContent().getOrDefault(lang, post.getContent().getOrDefault("pt", "")),
+            post.getImage(),
+            post.getAuthor(),
+            post.getTags(),
+            post.getCategory(),
+            post.getMetaDescription().getOrDefault(lang, post.getMetaDescription().getOrDefault("pt", "")),
+            post.getAffiliateLinks().getOrDefault(lang, post.getAffiliateLinks().getOrDefault("pt", "")),
+            post.getStatus().name(),
+            post.getPublishedAt() != null ? post.getPublishedAt().toString() : null,
+            post.getReadTime()
+        );
     }
+
 
     public List<LocalizedPostResponseDTO> toLocalizedResponseList(List<Post> posts) {
         return posts.stream().map(this::toLocalizedResponse).collect(Collectors.toList());

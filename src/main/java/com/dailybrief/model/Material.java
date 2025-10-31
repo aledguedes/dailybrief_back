@@ -1,12 +1,16 @@
 package com.dailybrief.model;
 
 import java.time.ZonedDateTime;
+import java.util.List;
+
 import lombok.Data;
 import jakarta.persistence.*;
+import com.vladmihalcea.hibernate.type.json.JsonType;
+import org.hibernate.annotations.Type;
 
 @Entity
 @Data
-@Table(name = "materials")
+@Table(name = "tbl_materials")
 public class Material {
 
     @Id
@@ -16,44 +20,35 @@ public class Material {
     @Column(name = "user_id", nullable = false, length = 255)
     private String userId;
 
-    @Column(name = "automation_request_id")
-    private Integer automationRequestId;
-
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "status_id", nullable = false)
     private Status status;
 
-    @Lob // Para mapear para TEXT
+    @Column(name = "post_id", length = 255)
+    private String postId;
+
+    @Lob
     @Column(name = "theme")
     private String theme;
 
     @Column(name = "content_type", length = 255)
     private String contentType;
 
-    @Lob
-    @Column(name = "raw_material_ids")
-    private String rawMaterialIds; // Mapeado como String, considere um tipo mais estruturado (List<String>) se
-                                   // necessário
-
-    @Lob
-    @Column(name = "generated_content")
-    private String generatedContent;
+    @Type(JsonType.class)
+    @Column(name = "raw_material_ids", columnDefinition = "jsonb")
+    private List<String> rawMaterialIds;
 
     @Lob
     @Column(name = "suggested_image_prompt")
     private String suggestedImagePrompt;
+
+    @Type(JsonType.class)
+    @Column(name = "source_urls", columnDefinition = "jsonb")
+    private List<String> sourceUrls;
 
     @Column(name = "created_at", nullable = false)
     private ZonedDateTime createdAt;
 
     @Column(name = "updated_at", nullable = false)
     private ZonedDateTime updatedAt;
-
-    @Lob
-    @Column(name = "source_urls")
-    private String sourceUrls; // Mapeado como String, considere um tipo mais estruturado (List<String>) se
-                               // necessário
-
-    // Getters and Setters (omitted for brevity)
-    // Construtores (omitted for brevity)
 }

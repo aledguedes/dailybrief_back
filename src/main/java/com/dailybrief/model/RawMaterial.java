@@ -6,7 +6,7 @@ import jakarta.persistence.*;
 
 @Entity
 @Data
-@Table(name = "raw_materials")
+@Table(name = "tbl_raw_materials")
 public class RawMaterial {
 
     @Id

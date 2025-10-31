@@ -6,7 +6,7 @@ import jakarta.persistence.*;
 
 @Entity
 @Data
-@Table(name = "automation_configs")
+@Table(name = "tbl_automation_configs")
 public class AutomationConfig {
 
     @Id

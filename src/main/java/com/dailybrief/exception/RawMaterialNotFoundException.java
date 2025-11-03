@@ -1,12 +1,12 @@
 package com.dailybrief.exception;
 
-public class PostNotFoundException extends RuntimeException {
+public class RawMaterialNotFoundException extends RuntimeException {
     /**
 	 * 
 	 */
 	private static final long serialVersionUID = 1L;
 
-	public PostNotFoundException(String message) {
+	public RawMaterialNotFoundException(String message) {
         super(message);
     }
 }

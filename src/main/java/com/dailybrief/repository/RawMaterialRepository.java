@@ -14,4 +14,6 @@ public interface RawMaterialRepository extends JpaRepository<RawMaterial, String
 
     // Exemplo de consulta: busca todos por userId
     List<RawMaterial> findByUserId(String userId);
+    
+    List<RawMaterial> findAllByIdIn(List<String> ids);
 }

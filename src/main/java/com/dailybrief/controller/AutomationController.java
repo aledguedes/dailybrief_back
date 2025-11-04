@@ -2,11 +2,13 @@ package com.dailybrief.controller;
 
 import com.dailybrief.dto.MaterialResponseDTO;
 import com.dailybrief.dto.RawMaterialResponseDTO; // Novo Import
+import com.dailybrief.dto.RawMaterialUpdateDTO;
 import com.dailybrief.service.AutomationService;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import jakarta.validation.Valid;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -64,5 +66,19 @@ public class AutomationController {
 		RawMaterialResponseDTO rawMaterial = automationService.getRawMaterialContentById(rawMaterialId);
 
 		return ResponseEntity.ok(rawMaterial);
+	}
+
+	@Operation(summary = "Atualizar o conteúdo bruto por ID", description = "Atualiza o campo 'content' de um RawMaterial pelo seu ID.")
+	@ApiResponses({ @ApiResponse(responseCode = "200", description = "Conteúdo bruto atualizado com sucesso"),
+			@ApiResponse(responseCode = "400", description = "Erro de validação ou ID inválido"),
+			@ApiResponse(responseCode = "404", description = "Matéria-prima não encontrada") })
+	@PutMapping("/raw-materials/{rawMaterialId}")
+	public ResponseEntity<RawMaterialResponseDTO> updateRawMaterialContent(@PathVariable String rawMaterialId,
+			@RequestBody @Valid RawMaterialUpdateDTO updateDTO) {
+
+		RawMaterialResponseDTO updatedRawMaterial = automationService.updateRawMaterialContent(rawMaterialId,
+				updateDTO);
+
+		return ResponseEntity.ok(updatedRawMaterial);
 	}
 }

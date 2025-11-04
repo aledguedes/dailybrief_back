@@ -2,6 +2,7 @@ package com.dailybrief.service;
 
 import com.dailybrief.dto.MaterialResponseDTO;
 import com.dailybrief.dto.RawMaterialResponseDTO;
+import com.dailybrief.dto.RawMaterialUpdateDTO;
 
 import java.util.List;
 
@@ -16,4 +17,6 @@ public interface AutomationService {
 	List<RawMaterialResponseDTO> getRawMaterialsContentByMaterialId(String taskId);
 
 	RawMaterialResponseDTO getRawMaterialContentById(String rawMaterialId);
+	
+	RawMaterialResponseDTO updateRawMaterialContent(String rawMaterialId, RawMaterialUpdateDTO updateDTO);
 }

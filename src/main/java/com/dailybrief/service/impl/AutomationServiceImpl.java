@@ -2,6 +2,7 @@ package com.dailybrief.service.impl;
 
 import com.dailybrief.dto.MaterialResponseDTO;
 import com.dailybrief.dto.RawMaterialResponseDTO;
+import com.dailybrief.dto.RawMaterialUpdateDTO;
 import com.dailybrief.exception.PostNotFoundException;
 import com.dailybrief.exception.RawMaterialNotFoundException;
 import com.dailybrief.mapper.MaterialMapper;
@@ -11,6 +12,8 @@ import com.dailybrief.model.RawMaterial;
 import com.dailybrief.repository.MaterialRepository;
 import com.dailybrief.repository.RawMaterialRepository;
 import com.dailybrief.service.AutomationService;
+
+import jakarta.transaction.Transactional;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -23,15 +26,12 @@ import org.springframework.stereotype.Service;
 public class AutomationServiceImpl implements AutomationService {
 
 	private final MaterialRepository materialRepository;
-	private final RawMaterialRepository rawMaterialRepository; // Injeção do novo repositório
+	private final RawMaterialRepository rawMaterialRepository;
 	private final MaterialMapper materialMapper;
-	private final RawMaterialMapper rawMaterialMapper; // Injeção do novo mapper
+	private final RawMaterialMapper rawMaterialMapper;
 
-	public AutomationServiceImpl(MaterialRepository materialRepository, RawMaterialRepository rawMaterialRepository, // Adicionar
-																														// no
-																														// construtor
-			MaterialMapper materialMapper, RawMaterialMapper rawMaterialMapper // Adicionar no construtor
-	) {
+	public AutomationServiceImpl(MaterialRepository materialRepository, RawMaterialRepository rawMaterialRepository,
+			MaterialMapper materialMapper, RawMaterialMapper rawMaterialMapper) {
 		this.materialRepository = materialRepository;
 		this.rawMaterialRepository = rawMaterialRepository;
 		this.materialMapper = materialMapper;
@@ -71,22 +71,19 @@ public class AutomationServiceImpl implements AutomationService {
 	 */
 	@Override
 	public List<RawMaterialResponseDTO> getRawMaterialsContentByMaterialId(String taskId) {
-		// 1. Busca o Material para obter a lista de rawMaterialIds
+
 		Material material = materialRepository.findById(taskId)
 				.orElseThrow(() -> new PostNotFoundException("Material not found with taskId: " + taskId));
 
 		List<String> rawMaterialIds = material.getRawMaterialIds();
 
 		if (rawMaterialIds == null || rawMaterialIds.isEmpty()) {
-			return List.of(); // Retorna lista vazia se não houver IDs
+			return List.of();
 		}
 
-		// 2. Busca todas as entidades RawMaterial pelos IDs
 		List<RawMaterial> rawMaterials = rawMaterialRepository.findAllByIdIn(rawMaterialIds);
 
-		// 3. Usa o MapStruct (rawMaterialMapper) para converter a lista de entidades em
-		// DTOs
-		return rawMaterials.stream().map(rawMaterialMapper::toResponse) // MapStruct em ação!
+		return rawMaterials.stream().map(rawMaterialMapper::toResponse)
 				.collect(Collectors.toList());
 	}
 
@@ -103,5 +100,26 @@ public class AutomationServiceImpl implements AutomationService {
 				() -> new RawMaterialNotFoundException("Raw Material not found with id: " + rawMaterialId));
 
 		return rawMaterialMapper.toFullResponse(rawMaterial);
+	}
+
+	/**
+	 * Atualiza o campo 'content' de um RawMaterial específico.
+	 *
+	 * @param rawMaterialId ID da matéria-prima a ser atualizada.
+	 * @param updateDTO     DTO contendo o novo conteúdo.
+	 * @return O RawMaterialResponseDTO atualizado (com conteúdo completo).
+	 */
+	@Override
+	@Transactional
+	public RawMaterialResponseDTO updateRawMaterialContent(String rawMaterialId, RawMaterialUpdateDTO updateDTO) {
+
+		RawMaterial rawMaterial = rawMaterialRepository.findById(rawMaterialId)
+				.orElseThrow(() -> new RawMaterialNotFoundException(rawMaterialId));
+
+		rawMaterial.setContent(updateDTO.content());
+
+		RawMaterial updatedRawMaterial = rawMaterialRepository.save(rawMaterial);
+
+		return rawMaterialMapper.toFullResponse(updatedRawMaterial);
 	}
 }

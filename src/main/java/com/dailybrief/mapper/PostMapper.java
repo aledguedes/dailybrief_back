@@ -9,13 +9,10 @@ import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 @Component
 public class PostMapper {
-
-	private static final Logger logger = LoggerFactory.getLogger(PostMapper.class);
 
 	// ---------- CONVERSÃO DE REQUEST PARA ENTIDADE ----------
 	public Post toEntity(PostRequestDTO postRequest) {
@@ -77,11 +74,7 @@ public class PostMapper {
 	}
 
 	public List<LocalizedPostResponseDTO> toLocalizedResponseList(List<Post> posts) {
-		return toLocalizedResponseList(posts, null);
-	}
-
-	public List<LocalizedPostResponseDTO> toLocalizedResponseList(List<Post> posts, String lang) {
-		return posts.stream().map(post -> toLocalizedResponse(post, lang)).collect(Collectors.toList());
+		return posts.stream().map(this::toLocalizedResponse).collect(Collectors.toList());
 	}
 
 	// ---------- DASHBOARD POST RESPONSE ----------

@@ -3,17 +3,17 @@ package com.dailybrief.dto;
 import java.util.List;
 
 public record LocalizedPostResponseDTO(
-    String id,
-    String title,
-    String excerpt,
-    String content,
-    String image,
-    String author,
-    List<String> tags,
-    String category,
-    String metaDescription,
-    String affiliateLinks,
-    String status,
-    String date,
-    String readTime
-) {}
+        String id,
+        String title,
+        String excerpt,
+        String content,
+        String image,
+        String author,
+        List<String> tags,
+        String category,
+        String metaDescription,
+        String affiliateLinks,
+        String status,
+        String date,
+        String readTime) {
+}

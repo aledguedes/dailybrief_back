@@ -8,12 +8,9 @@ import java.util.List;
 
 @Repository
 public interface RawMaterialRepository extends JpaRepository<RawMaterial, String> {
-
-    // Exemplo de consulta: busca todos por taskId (FK de Material)
-    List<RawMaterial> findByMaterial_TaskId(String taskId);
-
-    // Exemplo de consulta: busca todos por userId
     List<RawMaterial> findByUserId(String userId);
-    
+
     List<RawMaterial> findAllByIdIn(List<String> ids);
+
+    List<RawMaterial> findByContentContainingIgnoreCaseOrUrlContainingIgnoreCase(String contentQuery, String urlQuery);
 }

@@ -6,8 +6,9 @@ import com.dailybrief.dto.PostResponseDTO;
 import com.dailybrief.exception.PostNotFoundException;
 import com.dailybrief.mapper.PostMapper;
 import com.dailybrief.model.Post;
-import com.dailybrief.model.PostStatus;
+import com.dailybrief.model.Status;
 import com.dailybrief.repository.PostRepository;
+import com.dailybrief.repository.StatusRepository;
 import com.dailybrief.service.PostService;
 
 import org.springframework.stereotype.Service;
@@ -20,20 +21,29 @@ public class PostServiceImpl implements PostService {
 
     private final PostRepository postRepository;
     private final PostMapper postMapper;
+    private final StatusRepository statusRepository;
 
-    public PostServiceImpl(PostRepository postRepository, PostMapper postMapper) {
+
+    public PostServiceImpl(PostRepository postRepository, PostMapper postMapper, StatusRepository statusRepository) {
         this.postRepository = postRepository;
         this.postMapper = postMapper;
+        this.statusRepository = statusRepository;
     }
 
     @Override
     @Transactional
     public PostResponseDTO createPost(PostRequestDTO postRequest) {
+    	Integer STATUS_PENDING_ID = 10;
         Post post = postMapper.toEntity(postRequest);
-        post.setStatus(PostStatus.PENDING); // Default
+
+        Status defaultStatus = statusRepository.findById(STATUS_PENDING_ID)
+                .orElseThrow(() -> new IllegalStateException("Status with ID " + STATUS_PENDING_ID + " not found"));
+        post.setStatus(defaultStatus);
+
         if (post.getReadTime() == null) {
             post.setReadTime(estimateReadTime(postRequest.content().getOrDefault("pt", "")));
         }
+
         Post savedPost = postRepository.save(post);
         return postMapper.toResponse(savedPost);
     }
@@ -60,12 +70,15 @@ public class PostServiceImpl implements PostService {
     public PostResponseDTO updatePost(String id, PostRequestDTO postRequest) {
         Post post = postRepository.findById(id)
                 .orElseThrow(() -> new PostNotFoundException("Post with id " + id + " not found"));
+
         Post updatedPost = postMapper.toEntity(postRequest);
         updatedPost.setId(id);
-        updatedPost.setStatus(post.getStatus());
+        updatedPost.setStatus(post.getStatus()); // mantém o status existente
+
         if (updatedPost.getReadTime() == null) {
             updatedPost.setReadTime(estimateReadTime(postRequest.content().getOrDefault("pt", "")));
         }
+
         Post savedPost = postRepository.save(updatedPost);
         return postMapper.toResponse(savedPost);
     }
@@ -73,19 +86,30 @@ public class PostServiceImpl implements PostService {
     @Override
     @Transactional
     public PostResponseDTO approvePost(String id) {
+    	Integer STATUS_APPROVED_ID = 15;
         Post post = postRepository.findById(id)
                 .orElseThrow(() -> new PostNotFoundException("Post with id " + id + " not found"));
-        post.setStatus(PostStatus.APPROVED);
+
+        Status approvedStatus = statusRepository.findById(STATUS_APPROVED_ID)
+                .orElseThrow(() -> new IllegalStateException("Status with ID 15 not found"));
+
+        post.setStatus(approvedStatus);
         Post savedPost = postRepository.save(post);
         return postMapper.toResponse(savedPost);
     }
 
+
     @Override
     @Transactional
     public PostResponseDTO rejectPost(String id) {
+    	Integer STATUS_REJECTED_ID = 16;
         Post post = postRepository.findById(id)
                 .orElseThrow(() -> new PostNotFoundException("Post with id " + id + " not found"));
-        post.setStatus(PostStatus.REJECTED);
+
+        Status rejectedStatus = statusRepository.findById(STATUS_REJECTED_ID)
+                .orElseThrow(() -> new IllegalStateException("Status with ID " + STATUS_REJECTED_ID + " not found"));
+
+        post.setStatus(rejectedStatus);
         Post savedPost = postRepository.save(post);
         return postMapper.toResponse(savedPost);
     }
@@ -98,15 +122,6 @@ public class PostServiceImpl implements PostService {
         }
         postRepository.deleteById(id);
     }
-
-    // @Override
-    // public Mono<Post> saveGeneratedPost(FinalPostSubmissionRequestDTO requestDTO)
-    // {
-    // return Mono.fromCallable(() -> {
-    // Post post = postMapper.toEntityFromFinalPostDTO(requestDTO);
-    // return postRepository.save(post);
-    // });
-    // }
 
     private String estimateReadTime(String content) {
         int words = content.split("\\s+").length;

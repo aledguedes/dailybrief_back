@@ -1,6 +1,7 @@
 package com.dailybrief.service.impl;
 
 import com.dailybrief.dto.MaterialResponseDTO;
+import com.dailybrief.dto.MaterialStatusUpdateDTO;
 import com.dailybrief.dto.RawMaterialResponseDTO;
 import com.dailybrief.dto.RawMaterialUpdateDTO;
 import com.dailybrief.exception.PostNotFoundException;
@@ -9,11 +10,13 @@ import com.dailybrief.mapper.MaterialMapper;
 import com.dailybrief.mapper.RawMaterialMapper;
 import com.dailybrief.model.Material;
 import com.dailybrief.model.RawMaterial;
+import com.dailybrief.model.Status;
 import com.dailybrief.repository.MaterialRepository;
 import com.dailybrief.repository.RawMaterialRepository;
+import com.dailybrief.repository.StatusRepository;
 import com.dailybrief.service.AutomationService;
 
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -25,37 +28,27 @@ import org.springframework.stereotype.Service;
 @Service
 public class AutomationServiceImpl implements AutomationService {
 
+	private final StatusRepository statusRepository;
 	private final MaterialRepository materialRepository;
 	private final RawMaterialRepository rawMaterialRepository;
 	private final MaterialMapper materialMapper;
 	private final RawMaterialMapper rawMaterialMapper;
 
-	public AutomationServiceImpl(MaterialRepository materialRepository, RawMaterialRepository rawMaterialRepository,
+	public AutomationServiceImpl(StatusRepository statusRepository, MaterialRepository materialRepository,
+			RawMaterialRepository rawMaterialRepository,
 			MaterialMapper materialMapper, RawMaterialMapper rawMaterialMapper) {
+		this.statusRepository = statusRepository;
 		this.materialRepository = materialRepository;
 		this.rawMaterialRepository = rawMaterialRepository;
 		this.materialMapper = materialMapper;
 		this.rawMaterialMapper = rawMaterialMapper;
 	}
 
-	/**
-	 * Lista todos os materiais com paginação
-	 *
-	 * @param pageable parâmetros de paginação (page, size, sort)
-	 * @return página de MaterialResponseDTO
-	 */
 	@Override
 	public Page<MaterialResponseDTO> getAllMaterials(Pageable pageable) {
 		return materialRepository.findAll(pageable).map(materialMapper::toResponse);
 	}
 
-	/**
-	 * Busca um material pelo taskId
-	 *
-	 * @param taskId identificador do material
-	 * @return MaterialResponseDTO correspondente
-	 * @throws PostNotFoundException se o material não for encontrado
-	 */
 	@Override
 	public MaterialResponseDTO getMaterialById(String taskId) {
 		Material material = materialRepository.findById(taskId)
@@ -63,12 +56,6 @@ public class AutomationServiceImpl implements AutomationService {
 		return materialMapper.toResponse(material);
 	}
 
-	/**
-	 * Busca o conteúdo das matérias-primas de um material.
-	 *
-	 * @param taskId identificador do material
-	 * @return Lista de RawMaterialResponseDTO
-	 */
 	@Override
 	public List<RawMaterialResponseDTO> getRawMaterialsContentByMaterialId(String taskId) {
 
@@ -87,13 +74,6 @@ public class AutomationServiceImpl implements AutomationService {
 				.collect(Collectors.toList());
 	}
 
-	/**
-	 * Busca um RawMaterial completo pelo seu ID.
-	 *
-	 * @param rawMaterialId identificador do RawMaterial
-	 * @return RawMaterialResponseDTO com o conteúdo COMPLETO.
-	 * @throws RawMaterialNotFoundException se o material bruto não for encontrado.
-	 */
 	@Override
 	public RawMaterialResponseDTO getRawMaterialContentById(String rawMaterialId) {
 		RawMaterial rawMaterial = rawMaterialRepository.findById(rawMaterialId).orElseThrow(
@@ -102,13 +82,6 @@ public class AutomationServiceImpl implements AutomationService {
 		return rawMaterialMapper.toFullResponse(rawMaterial);
 	}
 
-	/**
-	 * Atualiza o campo 'content' de um RawMaterial específico.
-	 *
-	 * @param rawMaterialId ID da matéria-prima a ser atualizada.
-	 * @param updateDTO     DTO contendo o novo conteúdo.
-	 * @return O RawMaterialResponseDTO atualizado (com conteúdo completo).
-	 */
 	@Override
 	@Transactional
 	public RawMaterialResponseDTO updateRawMaterialContent(String rawMaterialId, RawMaterialUpdateDTO updateDTO) {
@@ -121,5 +94,72 @@ public class AutomationServiceImpl implements AutomationService {
 		RawMaterial updatedRawMaterial = rawMaterialRepository.save(rawMaterial);
 
 		return rawMaterialMapper.toFullResponse(updatedRawMaterial);
+	}
+
+	@Override
+	@Transactional
+	public MaterialResponseDTO updateMaterialStatus(String taskId, MaterialStatusUpdateDTO updateDTO) {
+		Material material = materialRepository.findById(taskId)
+				.orElseThrow(() -> new PostNotFoundException("Material not found with taskId: " + taskId));
+
+		Status newStatus = statusRepository.findById(updateDTO.statusId())
+				.orElseThrow(() -> new PostNotFoundException("Status not found with ID: " + updateDTO.statusId()));
+
+		material.setStatus(newStatus);
+		Material updatedMaterial = materialRepository.save(material);
+
+		return materialMapper.toResponse(updatedMaterial);
+	}
+
+	@Override
+	@Transactional(readOnly = true)
+	public List<RawMaterialResponseDTO> searchRawMaterials(String query) {
+		if (query == null || query.isBlank()) {
+			return List.of();
+		}
+
+		List<RawMaterial> rawMaterials = rawMaterialRepository
+				.findByContentContainingIgnoreCaseOrUrlContainingIgnoreCase(query, query);
+
+		return rawMaterials.stream()
+				.map(rawMaterialMapper::toResponse)
+				.collect(Collectors.toList());
+	}
+
+	@Override
+	@Transactional(readOnly = true)
+	public String exportRawMaterials(String format) {
+		List<RawMaterial> allRawMaterials = rawMaterialRepository.findAll();
+
+		switch (format.toLowerCase()) {
+			case "csv":
+
+				String csvHeader = "ID,URL,Content_Preview,CreatedAt\n";
+				String csvBody = allRawMaterials.stream()
+						.map(rm -> String.format("\"%s\",\"%s\",\"%s\",\"%s\"",
+								rm.getId(),
+								rm.getUrl(),
+
+								rawMaterialMapper.truncateContent(rm.getContent()),
+								rm.getCreatedAt()))
+						.collect(Collectors.joining("\n"));
+				return csvHeader + csvBody;
+
+			case "json":
+
+				return allRawMaterials.stream()
+						.map(rawMaterialMapper::toFullResponse)
+						.collect(Collectors.toList())
+						.toString();
+
+			case "txt":
+				return allRawMaterials.stream()
+						.map(rm -> "ID: " + rm.getId() + "\nURL: " + rm.getUrl() + "\nContent:\n" + rm.getContent()
+								+ "\n---\n")
+						.collect(Collectors.joining());
+
+			default:
+				throw new IllegalArgumentException("Formato de exportação inválido: " + format);
+		}
 	}
 }

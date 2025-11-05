@@ -1,7 +1,8 @@
 package com.dailybrief.controller;
 
 import com.dailybrief.dto.MaterialResponseDTO;
-import com.dailybrief.dto.RawMaterialResponseDTO; // Novo Import
+import com.dailybrief.dto.MaterialStatusUpdateDTO;
+import com.dailybrief.dto.RawMaterialResponseDTO;
 import com.dailybrief.dto.RawMaterialUpdateDTO;
 import com.dailybrief.service.AutomationService;
 
@@ -14,7 +15,10 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import java.util.List; // Novo Import
+import java.util.List;
+
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 
 @RestController
 @RequestMapping("/api/automation")
@@ -30,7 +34,7 @@ public class AutomationController {
 	@Operation(summary = "Listar todos os materiais", description = "Lista todos os materiais com paginação (page e size)")
 	@ApiResponses({ @ApiResponse(responseCode = "200", description = "Materiais recuperados com sucesso"),
 			@ApiResponse(responseCode = "500", description = "Erro interno do servidor") })
-	@GetMapping
+	@GetMapping("/materials/list-all")
 	public ResponseEntity<Page<MaterialResponseDTO>> getAllMaterials(@RequestParam(defaultValue = "0") int page,
 			@RequestParam(defaultValue = "10") int size) {
 		Page<MaterialResponseDTO> materials = automationService.getAllMaterials(PageRequest.of(page, size));
@@ -40,7 +44,7 @@ public class AutomationController {
 	@Operation(summary = "Obter material por taskId", description = "Busca um material pelo seu identificador único (taskId)")
 	@ApiResponses({ @ApiResponse(responseCode = "200", description = "Material recuperado com sucesso"),
 			@ApiResponse(responseCode = "404", description = "Material não encontrado") })
-	@GetMapping("/materials/{taskId}")
+	@GetMapping("/materials/list-by-task-id/{taskId}")
 	public ResponseEntity<MaterialResponseDTO> getMaterialById(@PathVariable String taskId) {
 		MaterialResponseDTO material = automationService.getMaterialById(taskId);
 		return ResponseEntity.ok(material);
@@ -80,5 +84,69 @@ public class AutomationController {
 				updateDTO);
 
 		return ResponseEntity.ok(updatedRawMaterial);
+	}
+
+	@Operation(summary = "Atualiza o status de um Material", description = "Muda o status do material, recebendo o ID do novo status, e retorna o material atualizado.")
+	@ApiResponses({
+			@ApiResponse(responseCode = "200", description = "Status atualizado com sucesso"),
+			@ApiResponse(responseCode = "400", description = "ID de Status inválido ou erro de validação"),
+			@ApiResponse(responseCode = "404", description = "Material ou Status não encontrado")
+	})
+	@PutMapping("/materials/{taskId}/status")
+	public ResponseEntity<MaterialResponseDTO> updateMaterialStatus(
+			@PathVariable String taskId,
+			@RequestBody @Valid MaterialStatusUpdateDTO updateDTO) {
+
+		MaterialResponseDTO updatedMaterial = automationService.updateMaterialStatus(taskId, updateDTO);
+		return ResponseEntity.ok(updatedMaterial);
+	}
+
+	@Operation(summary = "Busca por conteúdo ou URL em RawMaterials", description = "Retorna RawMaterials cujos campos content ou url contêm o termo de busca (parâmetro 'query').")
+	@ApiResponses({
+			@ApiResponse(responseCode = "200", description = "Resultados da busca recuperados com sucesso")
+	})
+	@GetMapping("/raw-materials/search")
+	public ResponseEntity<List<RawMaterialResponseDTO>> searchRawMaterials(
+			@RequestParam String query) {
+
+		List<RawMaterialResponseDTO> results = automationService.searchRawMaterials(query);
+		return ResponseEntity.ok(results);
+	}
+
+	@Operation(summary = "Exportar todos os RawMaterials", description = "Exporta todos os dados brutos nos formatos CSV, JSON ou TXT (parâmetro 'format'). Formato padrão: CSV.")
+	@ApiResponses({
+			@ApiResponse(responseCode = "200", description = "Arquivo gerado e retornado com sucesso"),
+			@ApiResponse(responseCode = "400", description = "Formato de exportação inválido")
+	})
+	@GetMapping("/raw-materials/export")
+	public ResponseEntity<String> exportRawMaterials(
+			@RequestParam(defaultValue = "csv") String format) {
+
+		String exportedData = automationService.exportRawMaterials(format);
+
+		MediaType mediaType;
+		String extension;
+
+		switch (format.toLowerCase()) {
+			case "json":
+				mediaType = MediaType.APPLICATION_JSON;
+				extension = "json";
+				break;
+			case "txt":
+				mediaType = MediaType.TEXT_PLAIN;
+				extension = "txt";
+				break;
+			case "csv":
+			default:
+				mediaType = MediaType.parseMediaType("text/csv");
+				extension = "csv";
+				break;
+		}
+
+		return ResponseEntity.ok()
+				.contentType(mediaType)
+				.header(HttpHeaders.CONTENT_DISPOSITION,
+						"attachment; filename=\"raw_materials_export." + extension + "\"")
+				.body(exportedData);
 	}
 }

@@ -6,14 +6,6 @@ import com.dailybrief.dto.PostRequestDTO;
 import com.dailybrief.dto.PostResponseDTO;
 import com.dailybrief.service.PostService;
 
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -23,7 +15,6 @@ public class PostController {
 
     private final PostService postService;
 
-    @Autowired
     public PostController(PostService postService) {
         this.postService = postService;
     }
@@ -36,8 +27,8 @@ public class PostController {
      */
     @Operation(summary = "Criar um novo post", description = "Este serviço cria um novo post no sistema com base nos dados fornecidos.")
     @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = "Post criado com sucesso."),
-        @ApiResponse(responseCode = "400", description = "Erro ao criar o post.")
+            @ApiResponse(responseCode = "200", description = "Post criado com sucesso."),
+            @ApiResponse(responseCode = "400", description = "Erro ao criar o post.")
     })
     @PostMapping
     public ResponseEntity<PostResponseDTO> createPost(
@@ -55,8 +46,8 @@ public class PostController {
      */
     @Operation(summary = "Obter todos os posts", description = "Este serviço retorna uma lista de todos os posts, com suporte a paginação.")
     @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = "Lista de posts recuperada com sucesso."),
-        @ApiResponse(responseCode = "400", description = "Erro ao recuperar os posts.")
+            @ApiResponse(responseCode = "200", description = "Lista de posts recuperada com sucesso."),
+            @ApiResponse(responseCode = "400", description = "Erro ao recuperar os posts.")
     })
     @GetMapping
     public ResponseEntity<Page<PostResponseDTO>> getAllPosts(Pageable pageable) {
@@ -72,8 +63,8 @@ public class PostController {
      */
     @Operation(summary = "Obter todos os posts localizados", description = "Este serviço retorna uma lista de posts localizados, com suporte a paginação.")
     @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = "Lista de posts localizados recuperada com sucesso."),
-        @ApiResponse(responseCode = "400", description = "Erro ao recuperar os posts localizados.")
+            @ApiResponse(responseCode = "200", description = "Lista de posts localizados recuperada com sucesso."),
+            @ApiResponse(responseCode = "400", description = "Erro ao recuperar os posts localizados.")
     })
     @GetMapping("/localized")
     public ResponseEntity<Page<PostResponseDTO>> getAllPostsLocalized(Pageable pageable) {
@@ -89,103 +80,54 @@ public class PostController {
      */
     @Operation(summary = "Obter post por ID", description = "Este serviço retorna os detalhes de um post específico pelo ID.")
     @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = "Post encontrado com sucesso."),
-        @ApiResponse(responseCode = "404", description = "Post não encontrado.")
+            @ApiResponse(responseCode = "200", description = "Post encontrado com sucesso."),
+            @ApiResponse(responseCode = "404", description = "Post não encontrado.")
     })
     @GetMapping("/{id}")
-    public ResponseEntity<PostResponseDTO> getPostById(
-            @Parameter(description = "ID do post a ser recuperado.") @PathVariable Long id) {
-
-        PostResponseDTO post = postService.getPostById(id);
-        return ResponseEntity.ok(post);
+    public ResponseEntity<PostResponseDTO> getPostById(@PathVariable String id) {
+        return ResponseEntity.ok(postService.getPostById(id));
     }
 
-    /**
-     * Atualiza um post existente.
-     *
-     * @param id ID do post a ser atualizado.
-     * @param postRequest Novos dados para o post.
-     * @return Detalhes do post atualizado.
-     */
-    @Operation(summary = "Atualizar um post", description = "Este serviço permite atualizar um post existente com novos dados.")
-    @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = "Post atualizado com sucesso."),
-        @ApiResponse(responseCode = "404", description = "Post não encontrado.")
-    })
     @PutMapping("/{id}")
-    public ResponseEntity<PostResponseDTO> updatePost(
-            @Parameter(description = "ID do post a ser atualizado.") @PathVariable Long id,
-            @Parameter(description = "Novos dados para o post.") @RequestBody PostRequestDTO postRequest) {
-
-        PostResponseDTO response = postService.updatePost(id, postRequest);
-        return ResponseEntity.ok(response);
+    public ResponseEntity<PostResponseDTO> updatePost(@PathVariable String id,
+            @RequestBody PostRequestDTO postRequest) {
+        return ResponseEntity.ok(postService.updatePost(id, postRequest));
     }
 
-    /**
-     * Aprova um post específico.
-     *
-     * @param id ID do post a ser aprovado.
-     * @return Detalhes do post aprovado.
-     */
-    @Operation(summary = "Aprovar post", description = "Este serviço aprova um post específico.")
-    @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = "Post aprovado com sucesso."),
-        @ApiResponse(responseCode = "404", description = "Post não encontrado.")
-    })
     @PatchMapping("/{id}/approve")
-    public ResponseEntity<PostResponseDTO> approvePost(
-            @Parameter(description = "ID do post a ser aprovado.") @PathVariable Long id) {
-
-        PostResponseDTO response = postService.approvePost(id);
-        return ResponseEntity.ok(response);
+    public ResponseEntity<PostResponseDTO> approvePost(@PathVariable String id) {
+        return ResponseEntity.ok(postService.approvePost(id));
     }
 
-    /**
-     * Rejeita um post específico.
-     *
-     * @param id ID do post a ser rejeitado.
-     * @return Detalhes do post rejeitado.
-     */
-    @Operation(summary = "Rejeitar post", description = "Este serviço rejeita um post específico.")
-    @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = "Post rejeitado com sucesso."),
-        @ApiResponse(responseCode = "404", description = "Post não encontrado.")
-    })
     @PatchMapping("/{id}/reject")
-    public ResponseEntity<PostResponseDTO> rejectPost(
-            @Parameter(description = "ID do post a ser rejeitado.") @PathVariable Long id) {
-
-        PostResponseDTO response = postService.rejectPost(id);
-        return ResponseEntity.ok(response);
+    public ResponseEntity<PostResponseDTO> rejectPost(@PathVariable String id) {
+        return ResponseEntity.ok(postService.rejectPost(id));
     }
 
-    /**
-     * Deleta um post específico.
-     *
-     * @param id ID do post a ser deletado.
-     */
-    @Operation(summary = "Deletar post", description = "Este serviço permite deletar um post específico.")
-    @ApiResponses(value = {
-        @ApiResponse(responseCode = "204", description = "Post deletado com sucesso."),
-        @ApiResponse(responseCode = "404", description = "Post não encontrado.")
-    })
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deletePost(@PathVariable Long id) {
+    public ResponseEntity<Void> deletePost(@PathVariable String id) {
         postService.deletePost(id);
         return ResponseEntity.noContent().build();
     }
+
+    // @PostMapping("/submit-final-post")
+    // public Mono<ResponseEntity<Void>> submitFinalPost(@RequestBody
+    // FinalPostSubmissionRequestDTO requestDTO) {
+    // return postService.saveGeneratedPost(requestDTO)
+    // .map(savedPost -> new ResponseEntity<>(HttpStatus.CREATED));
+    // }
 
     /**
      * Obtém os posts da homepage com base no limite e idioma fornecido.
      *
      * @param limit Limite de posts a serem retornados.
-     * @param lang Idioma dos posts.
+     * @param lang  Idioma dos posts.
      * @return Posts da homepage.
      */
     @Operation(summary = "Obter posts da homepage", description = "Este serviço retorna os posts mais recentes da homepage, com base no limite e idioma fornecido.")
     @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = "Posts da homepage recuperados com sucesso."),
-        @ApiResponse(responseCode = "400", description = "Erro ao recuperar os posts da homepage.")
+            @ApiResponse(responseCode = "200", description = "Posts da homepage recuperados com sucesso."),
+            @ApiResponse(responseCode = "400", description = "Erro ao recuperar os posts da homepage.")
     })
     @GetMapping("/homepage")
     public ResponseEntity<HomepagePostResponseDTO> getHomepagePosts(
@@ -199,14 +141,14 @@ public class PostController {
     /**
      * Obtém um post público específico pelo ID.
      *
-     * @param id ID do post público.
+     * @param id   ID do post público.
      * @param lang Idioma do post.
      * @return Detalhes do post público.
      */
     @Operation(summary = "Obter post público por ID", description = "Este serviço retorna os detalhes de um post público específico pelo ID.")
     @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = "Post público encontrado com sucesso."),
-        @ApiResponse(responseCode = "404", description = "Post não encontrado.")
+            @ApiResponse(responseCode = "200", description = "Post público encontrado com sucesso."),
+            @ApiResponse(responseCode = "404", description = "Post não encontrado.")
     })
     @GetMapping("/public/{id}")
     public ResponseEntity<LocalizedPostResponseDTO> getPublicPostById(

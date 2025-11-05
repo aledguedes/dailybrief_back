@@ -4,17 +4,17 @@ import java.util.List;
 import java.util.Map;
 
 public record PostResponseDTO(
-	    Long id,
+	    String id,
 	    Map<String, String> title,
 	    Map<String, String> excerpt,
 	    Map<String, String> content,
 	    String image,
 	    String author,
 	    List<String> tags,
-	    String category,
+	    CategoryResponseDTO category,
 	    Map<String, String> metaDescription,
 	    Map<String, String> affiliateLinks,
-	    String status,
+	    StatusDTO status,
 	    String publishedAt,
 	    String readTime,
 	    String createdAt,

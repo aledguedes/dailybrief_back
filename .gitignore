@@ -31,3 +31,29 @@ build/
 
 ### VS Code ###
 .vscode/
+
+### Logs ###
+logs/
+*.log
+*.gz
+
+### Database ###
+*.db
+*.sqlite
+*.h2.db
+
+### OS Files ###
+.DS_Store
+Thumbs.db
+
+### Eclipse ###
+.apt_generated_tests/
+.metadata/
+bin/
+
+### Maven ###
+.mvn/timing.properties
+.mvn/wrapper/maven-wrapper.properties
+
+### Spring Boot ###
+spring-boot-*.log

@@ -1,107 +1,152 @@
 package com.dailybrief.controller;
 
-import com.dailybrief.dto.AutomationDTO;
-import com.dailybrief.dto.TrendingTopicSuggestionDTO;
+import com.dailybrief.dto.MaterialResponseDTO;
+import com.dailybrief.dto.MaterialStatusUpdateDTO;
+import com.dailybrief.dto.RawMaterialResponseDTO;
+import com.dailybrief.dto.RawMaterialUpdateDTO;
 import com.dailybrief.service.AutomationService;
 
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import jakarta.validation.Valid;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
 import java.util.List;
+
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 
 @RestController
 @RequestMapping("/api/automation")
+@CrossOrigin(origins = "*")
 public class AutomationController {
 
-    private final AutomationService automationService;
+	private final AutomationService automationService;
 
-    @Autowired
-    public AutomationController(AutomationService automationService) {
-        this.automationService = automationService;
-    }
+	public AutomationController(AutomationService automationService) {
+		this.automationService = automationService;
+	}
 
-    /**
-     * Salva uma solicitação de automação e chama um serviço externo.
-     *
-     * @param dto DTO com os dados da automação.
-     * @param jwtToken Token JWT para autenticação.
-     * @return Resposta do serviço externo.
-     */
-    @Operation(summary = "Salvar uma solicitação de automação", description = "Este serviço salva uma solicitação de automação no banco de dados e chama um serviço externo para processá-la.")
-    @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = "Solicitação de automação salva com sucesso."),
-        @ApiResponse(responseCode = "400", description = "Erro ao chamar serviço externo ou erro de conexão.")
-    })
-    @PostMapping("/request")
-    public ResponseEntity<String> saveAutomationRequest(
-            @Parameter(description = "DTO contendo os dados da automação.") @RequestBody AutomationDTO dto,
-            @Parameter(description = "Token JWT de autenticação.") @RequestHeader String jwtToken) {
+	@Operation(summary = "Listar todos os materiais", description = "Lista todos os materiais com paginação (page e size)")
+	@ApiResponses({ @ApiResponse(responseCode = "200", description = "Materiais recuperados com sucesso"),
+			@ApiResponse(responseCode = "500", description = "Erro interno do servidor") })
+	@GetMapping("/materials/list-all")
+	public ResponseEntity<Page<MaterialResponseDTO>> getAllMaterials(@RequestParam(defaultValue = "0") int page,
+			@RequestParam(defaultValue = "10") int size) {
+		Page<MaterialResponseDTO> materials = automationService.getAllMaterials(PageRequest.of(page, size));
+		return ResponseEntity.ok(materials);
+	}
 
-        String response = automationService.saveAutomationRequest(dto, jwtToken);
-        return ResponseEntity.ok(response);
-    }
+	@Operation(summary = "Obter material por taskId", description = "Busca um material pelo seu identificador único (taskId)")
+	@ApiResponses({ @ApiResponse(responseCode = "200", description = "Material recuperado com sucesso"),
+			@ApiResponse(responseCode = "404", description = "Material não encontrado") })
+	@GetMapping("/materials/list-by-task-id/{taskId}")
+	public ResponseEntity<MaterialResponseDTO> getMaterialById(@PathVariable String taskId) {
+		MaterialResponseDTO material = automationService.getMaterialById(taskId);
+		return ResponseEntity.ok(material);
+	}
 
-    /**
-     * Salva ou atualiza uma lista de sugestões de tópicos em tendência.
-     *
-     * @param dtos Lista de DTOs com as sugestões de tópicos.
-     */
-    @Operation(summary = "Salvar sugestões de tópicos", description = "Este serviço salva ou atualiza as sugestões de tópicos em tendência no banco de dados.")
-    @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = "Sugestões de tópicos salvas com sucesso."),
-        @ApiResponse(responseCode = "400", description = "Lista de sugestões vazia ou inválida.")
-    })
-    @PostMapping("/suggestions")
-    public ResponseEntity<Void> saveSuggestions(
-            @Parameter(description = "Lista de DTOs com as sugestões de tópicos.") @RequestBody List<TrendingTopicSuggestionDTO> dtos) {
+	@Operation(summary = "Obter conteúdo bruto das matérias-primas", description = "Busca o conteúdo (URL e texto) de todas as matérias-primas (RawMaterial) associadas a um Material específico.")
+	@ApiResponses({ @ApiResponse(responseCode = "200", description = "Conteúdos brutos recuperados com sucesso"),
+			@ApiResponse(responseCode = "404", description = "Material não encontrado para buscar as matérias-primas") })
+	@GetMapping("/materials/{taskId}/raw-contents")
+	public ResponseEntity<List<RawMaterialResponseDTO>> getRawMaterialsContent(@PathVariable String taskId) {
 
-        automationService.saveSuggestions(dtos);
-        return ResponseEntity.ok().build();
-    }
+		List<RawMaterialResponseDTO> rawMaterials = automationService.getRawMaterialsContentByMaterialId(taskId);
 
-    /**
-     * Obtém uma lista de sugestões de tópicos com base no status fornecido.
-     *
-     * @param status O status das sugestões (por exemplo, "PENDENTE", "APROVADO").
-     * @return Lista de sugestões de tópicos.
-     */
-    @Operation(summary = "Obter sugestões de tópicos por status", description = "Este serviço obtém uma lista de sugestões de tópicos com base no status fornecido.")
-    @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = "Lista de sugestões recuperada com sucesso."),
-        @ApiResponse(responseCode = "400", description = "Status inválido.")
-    })
-    @GetMapping("/suggestions/status/{status}")
-    public ResponseEntity<List<TrendingTopicSuggestionDTO>> getSuggestionsByStatus(
-            @Parameter(description = "Status das sugestões (por exemplo, 'PENDENTE', 'APROVADO').") @PathVariable String status) {
+		return ResponseEntity.ok(rawMaterials);
+	}
 
-        List<TrendingTopicSuggestionDTO> suggestions = automationService.getSuggestionsByStatus(status);
-        return ResponseEntity.ok(suggestions);
-    }
+	@Operation(summary = "Obter conteúdo bruto COMPLETO por ID", description = "Busca um RawMaterial específico pelo seu ID e retorna o campo 'content' na íntegra.")
+	@ApiResponses({ @ApiResponse(responseCode = "200", description = "Conteúdo bruto recuperado com sucesso"),
+			@ApiResponse(responseCode = "404", description = "Matéria-prima não encontrada") })
+	@GetMapping("/raw-materials/{rawMaterialId}")
+	public ResponseEntity<RawMaterialResponseDTO> getRawMaterialContentById(@PathVariable String rawMaterialId) {
 
-    /**
-     * Atualiza uma sugestão de tópico existente com novos dados.
-     *
-     * @param id ID da sugestão a ser atualizada.
-     * @param dto DTO com os novos dados para a sugestão.
-     * @return DTO com a sugestão atualizada.
-     */
-    @Operation(summary = "Atualizar sugestão de tópico", description = "Este serviço atualiza uma sugestão de tópico existente com novos dados fornecidos no DTO.")
-    @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = "Sugestão de tópico atualizada com sucesso."),
-        @ApiResponse(responseCode = "404", description = "Sugestão não encontrada para o ID fornecido.")
-    })
-    @PutMapping("/suggestions/{id}")
-    public ResponseEntity<TrendingTopicSuggestionDTO> updateSuggestion(
-            @Parameter(description = "ID da sugestão a ser atualizada.") @PathVariable Long id,
-            @Parameter(description = "DTO contendo os novos dados da sugestão.") @RequestBody TrendingTopicSuggestionDTO dto) {
+		RawMaterialResponseDTO rawMaterial = automationService.getRawMaterialContentById(rawMaterialId);
 
-        TrendingTopicSuggestionDTO updatedSuggestion = automationService.updateSuggestion(id, dto);
-        return ResponseEntity.ok(updatedSuggestion);
-    }
+		return ResponseEntity.ok(rawMaterial);
+	}
+
+	@Operation(summary = "Atualizar o conteúdo bruto por ID", description = "Atualiza o campo 'content' de um RawMaterial pelo seu ID.")
+	@ApiResponses({ @ApiResponse(responseCode = "200", description = "Conteúdo bruto atualizado com sucesso"),
+			@ApiResponse(responseCode = "400", description = "Erro de validação ou ID inválido"),
+			@ApiResponse(responseCode = "404", description = "Matéria-prima não encontrada") })
+	@PutMapping("/raw-materials/{rawMaterialId}")
+	public ResponseEntity<RawMaterialResponseDTO> updateRawMaterialContent(@PathVariable String rawMaterialId,
+			@RequestBody @Valid RawMaterialUpdateDTO updateDTO) {
+
+		RawMaterialResponseDTO updatedRawMaterial = automationService.updateRawMaterialContent(rawMaterialId,
+				updateDTO);
+
+		return ResponseEntity.ok(updatedRawMaterial);
+	}
+
+	@Operation(summary = "Atualiza o status de um Material", description = "Muda o status do material, recebendo o ID do novo status, e retorna o material atualizado.")
+	@ApiResponses({
+			@ApiResponse(responseCode = "200", description = "Status atualizado com sucesso"),
+			@ApiResponse(responseCode = "400", description = "ID de Status inválido ou erro de validação"),
+			@ApiResponse(responseCode = "404", description = "Material ou Status não encontrado")
+	})
+	@PutMapping("/materials/{taskId}/status")
+	public ResponseEntity<MaterialResponseDTO> updateMaterialStatus(
+			@PathVariable String taskId,
+			@RequestBody @Valid MaterialStatusUpdateDTO updateDTO) {
+
+		MaterialResponseDTO updatedMaterial = automationService.updateMaterialStatus(taskId, updateDTO);
+		return ResponseEntity.ok(updatedMaterial);
+	}
+
+	@Operation(summary = "Busca por conteúdo ou URL em RawMaterials", description = "Retorna RawMaterials cujos campos content ou url contêm o termo de busca (parâmetro 'query').")
+	@ApiResponses({
+			@ApiResponse(responseCode = "200", description = "Resultados da busca recuperados com sucesso")
+	})
+	@GetMapping("/raw-materials/search")
+	public ResponseEntity<List<RawMaterialResponseDTO>> searchRawMaterials(
+			@RequestParam String query) {
+
+		List<RawMaterialResponseDTO> results = automationService.searchRawMaterials(query);
+		return ResponseEntity.ok(results);
+	}
+
+	@Operation(summary = "Exportar todos os RawMaterials", description = "Exporta todos os dados brutos nos formatos CSV, JSON ou TXT (parâmetro 'format'). Formato padrão: CSV.")
+	@ApiResponses({
+			@ApiResponse(responseCode = "200", description = "Arquivo gerado e retornado com sucesso"),
+			@ApiResponse(responseCode = "400", description = "Formato de exportação inválido")
+	})
+	@GetMapping("/raw-materials/export")
+	public ResponseEntity<String> exportRawMaterials(
+			@RequestParam(defaultValue = "csv") String format) {
+
+		String exportedData = automationService.exportRawMaterials(format);
+
+		MediaType mediaType;
+		String extension;
+
+		switch (format.toLowerCase()) {
+			case "json":
+				mediaType = MediaType.APPLICATION_JSON;
+				extension = "json";
+				break;
+			case "txt":
+				mediaType = MediaType.TEXT_PLAIN;
+				extension = "txt";
+				break;
+			case "csv":
+			default:
+				mediaType = MediaType.parseMediaType("text/csv");
+				extension = "csv";
+				break;
+		}
+
+		return ResponseEntity.ok()
+				.contentType(mediaType)
+				.header(HttpHeaders.CONTENT_DISPOSITION,
+						"attachment; filename=\"raw_materials_export." + extension + "\"")
+				.body(exportedData);
+	}
 }

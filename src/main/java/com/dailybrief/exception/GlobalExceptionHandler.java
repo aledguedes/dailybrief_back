@@ -1,36 +1,48 @@
 package com.dailybrief.exception;
 
-import jakarta.validation.ConstraintViolationException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.ControllerAdvice;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+
+import jakarta.validation.ConstraintViolationException;
+
+import java.time.ZonedDateTime;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 @ControllerAdvice
 public class GlobalExceptionHandler {
 
+    private ResponseEntity<Map<String, Object>> buildResponse(HttpStatus status, String message) {
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("timestamp", ZonedDateTime.now());
+        body.put("status", status.value());
+        body.put("error", status.getReasonPhrase());
+        body.put("message", message);
+        return new ResponseEntity<>(body, status);
+    }
+
     @ExceptionHandler(ConstraintViolationException.class)
-    public ResponseEntity<ErrorResponse> handleConstraintViolation(ConstraintViolationException ex) {
-        return buildResponse(HttpStatus.BAD_REQUEST, "Validation error", ex.getMessage());
+    public ResponseEntity<Map<String, Object>> handleConstraintViolation(ConstraintViolationException ex) {
+        return buildResponse(HttpStatus.BAD_REQUEST, "Validation error: " + ex.getMessage());
     }
 
     @ExceptionHandler(DataIntegrityViolationException.class)
-    public ResponseEntity<ErrorResponse> handleDataIntegrityViolation(DataIntegrityViolationException ex) {
-        String message = ex.getRootCause() != null ? ex.getRootCause().getMessage() : ex.getMessage();
-        return buildResponse(HttpStatus.BAD_REQUEST, "Database error", message);
+    public ResponseEntity<Map<String, Object>> handleDataIntegrityViolation(DataIntegrityViolationException ex) {
+        Throwable rootCause = ex.getRootCause();
+        String errorMessage = rootCause != null ? rootCause.getMessage() : ex.getMessage();
+        return buildResponse(HttpStatus.BAD_REQUEST, "Database error: " + errorMessage);
     }
 
     @ExceptionHandler(PostNotFoundException.class)
-    public ResponseEntity<ErrorResponse> handlePostNotFound(PostNotFoundException ex) {
-        return buildResponse(HttpStatus.NOT_FOUND, "Not found", ex.getMessage());
+    public ResponseEntity<Map<String, Object>> handleNotFound(PostNotFoundException ex) {
+        return buildResponse(HttpStatus.NOT_FOUND, ex.getMessage());
     }
 
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<ErrorResponse> handleGenericException(Exception ex) {
-        return buildResponse(HttpStatus.INTERNAL_SERVER_ERROR, "Internal server error", ex.getMessage());
-    }
-
-    private ResponseEntity<ErrorResponse> buildResponse(HttpStatus status, String error, String message) {
-        return new ResponseEntity<>(new ErrorResponse(status.value(), error, message), status);
+    public ResponseEntity<Map<String, Object>> handleGenericException(Exception ex) {
+        return buildResponse(HttpStatus.INTERNAL_SERVER_ERROR, "Internal server error: " + ex.getMessage());
     }
 }

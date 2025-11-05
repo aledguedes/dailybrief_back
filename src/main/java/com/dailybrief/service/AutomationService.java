@@ -1,16 +1,29 @@
 package com.dailybrief.service;
 
-import com.dailybrief.dto.AutomationDTO;
-import com.dailybrief.dto.TrendingTopicSuggestionDTO;
+import com.dailybrief.dto.MaterialResponseDTO;
+import com.dailybrief.dto.MaterialStatusUpdateDTO;
+import com.dailybrief.dto.RawMaterialResponseDTO;
+import com.dailybrief.dto.RawMaterialUpdateDTO;
 
 import java.util.List;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+
 public interface AutomationService {
-    String saveAutomationRequest(AutomationDTO dto, String jwtToken);
+	Page<MaterialResponseDTO> getAllMaterials(Pageable pageable);
 
-    void saveSuggestions(List<TrendingTopicSuggestionDTO> dtos);
+	MaterialResponseDTO getMaterialById(String taskId);
 
-    List<TrendingTopicSuggestionDTO> getSuggestionsByStatus(String status);
+	List<RawMaterialResponseDTO> getRawMaterialsContentByMaterialId(String taskId);
 
-    TrendingTopicSuggestionDTO updateSuggestion(Long id, TrendingTopicSuggestionDTO dto);
+	RawMaterialResponseDTO getRawMaterialContentById(String rawMaterialId);
+
+	RawMaterialResponseDTO updateRawMaterialContent(String rawMaterialId, RawMaterialUpdateDTO updateDTO);
+
+	MaterialResponseDTO updateMaterialStatus(String taskId, MaterialStatusUpdateDTO updateDTO);
+
+	List<RawMaterialResponseDTO> searchRawMaterials(String query);
+
+	String exportRawMaterials(String format);
 }

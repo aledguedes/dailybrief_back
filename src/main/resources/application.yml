@@ -17,24 +17,16 @@ springdoc:
 
 logging:
   level:
-    root: INFO
-    org.springframework: INFO
-    org.hibernate.SQL: DEBUG
-    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
-    com.aledguedes: DEBUG
-  # file:
-  #   name: logs/dailybrief_spring_boot.log
+    '[org.springframework]': INFO
+    '[com.aledguedes]': DEBUG
+  file:
+    name: logs/dailybrief_spring_boot.log # Define o caminho e nome do arquivo de log
   pattern:
-    file: "%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level [%thread] %logger{36} - %msg%n"
-    console: "%clr(%d{HH:mm:ss.SSS}){faint} %clr(%5p) %clr([%t]){faint} %clr(%c{1}){cyan} - %m%n%wEx"
-  logback:
-    rollingpolicy:
-      max-file-size: 10MB
-      max-history: 7
-      total-size-cap: 100MB
+    file: "%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level [%thread] %logger{36} - %msg%n" # Padrão de formato para o arquivo
 
 jwt:
   secret: 8/BaML+EoIY8u3UYs1ruYLU6a0LCaQ8ijBPKTKwwbBvZGAH3DroTqwlYPt5L+ZUhJs7y1OMa9bEloHPQg2zuFQ==
 
-
-
+python:
+  api:
+    base.url: http://localhost:8000

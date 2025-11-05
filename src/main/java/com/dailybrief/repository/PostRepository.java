@@ -13,12 +13,13 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public interface PostRepository extends JpaRepository<Post, Long> {
+public interface PostRepository extends JpaRepository<Post, String> {
     long count();
 
+    // long countAll();
     long countByStatus(PostStatus status);
 
-    Page<Post> findAllByOrderByPublishedAtDesc(Pageable pageable);
+    List<Post> findAllByOrderByPublishedAtDesc(Pageable pageable);
 
     @Query("SELECT p FROM Post p")
     @EntityGraph(attributePaths = { "title", "excerpt" })
@@ -31,6 +32,6 @@ public interface PostRepository extends JpaRepository<Post, Long> {
     @Query("SELECT p FROM Post p WHERE p.status = :status")
     @EntityGraph(attributePaths = { "title", "excerpt", "tags" })
     Page<Post> findByStatus(PostStatus status, Pageable pageable);
-    
+
     Optional<Post> findByIdAndStatus(Long id, PostStatus status);
 }

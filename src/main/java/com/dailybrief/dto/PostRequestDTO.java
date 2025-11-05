@@ -21,14 +21,14 @@ public record PostRequestDTO(
     String image,
     String author,
     List<String> tags,
-    String category,
+    Integer categoryId,
 
     @NotEmpty(message = "Meta description must contain at least one translation")
     @Size(min = 3, max = 3, message = "Meta description must contain translations for PT, EN, and ES")
     Map<String, String> metaDescription, // SEO
 
     Map<String, String> affiliateLinks, // Hotmart, ClickBank, Amazon
-    String status, // PENDING, APPROVED, REJECTED
+    Integer statusId,
     String publishedAt, // ISO 8601 format
     String readTime // Ex.: "5 min"
 ) {}

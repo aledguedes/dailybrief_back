@@ -26,7 +26,8 @@ public class SecurityConfig {
 
 	@Bean
 	public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-		http.csrf(csrf -> csrf.disable())
+		http
+				.csrf(csrf -> csrf.disable())
 				.sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 				.cors(cors -> cors.configurationSource(request -> {
 					CorsConfiguration config = new CorsConfiguration();
@@ -36,16 +37,17 @@ public class SecurityConfig {
 					config.setAllowCredentials(true);
 					return config;
 				}))
-				.authorizeHttpRequests(auth -> auth.requestMatchers(HttpMethod.GET, "/api/posts/homepage").permitAll()
-						.requestMatchers(HttpMethod.GET, "/api/posts/public/**").permitAll()
+				.authorizeHttpRequests(auth -> auth
 						.requestMatchers(HttpMethod.POST, "/api/logs").permitAll()
 						.requestMatchers(HttpMethod.GET, "/api/logs").authenticated()
 						.requestMatchers("/api/auth/**", "/api/admin/health").permitAll()
-						.requestMatchers("/api/dashboard/**").authenticated().requestMatchers("/api/admin/**")
-						.authenticated().requestMatchers("/api/posts/**").authenticated()
+						.requestMatchers("/api/dashboard/**").authenticated()
+						.requestMatchers("/api/admin/**").authenticated()
+						.requestMatchers("/api/posts/**").authenticated()
+						.requestMatchers("/api/categories/**").authenticated()
 						.requestMatchers("/api/automation/**").authenticated()
-						.requestMatchers("/h2-console/**", "/swagger-ui/**", "/api-docs/**").permitAll().anyRequest()
-						.permitAll())
+						.requestMatchers("/h2-console/**", "/swagger-ui/**", "/api-docs/**").permitAll()
+						.anyRequest().permitAll())
 				.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
 		http.headers(headers -> headers.frameOptions(frameOptions -> frameOptions.sameOrigin()));

@@ -124,7 +124,7 @@ public class AdminController {
     @PutMapping("/posts/{id}")
     public PostResponseDTO updatePost(@Parameter(description = "ID of the post to update") @PathVariable Long id,
             @Valid @RequestBody PostRequestDTO postRequest) {
-        return postService.updatePost(id, postRequest);
+        return postService.updatePost(id.toString(), postRequest);
     }
 
     @Operation(summary = "Approve a post", description = "Changes the status of a post to APPROVED")
@@ -134,7 +134,7 @@ public class AdminController {
             @ApiResponse(responseCode = "404", description = "Post not found")
     })
     @PostMapping("/posts/{id}/approve")
-    public PostResponseDTO approvePost(@Parameter(description = "ID of the post to approve") @PathVariable Long id) {
+    public PostResponseDTO approvePost(@Parameter(description = "ID of the post to approve") @PathVariable String id) {
         return postService.approvePost(id);
     }
 
@@ -145,7 +145,7 @@ public class AdminController {
             @ApiResponse(responseCode = "404", description = "Post not found")
     })
     @PostMapping("/posts/{id}/reject")
-    public PostResponseDTO rejectPost(@Parameter(description = "ID of the post to reject") @PathVariable Long id) {
+    public PostResponseDTO rejectPost(@Parameter(description = "ID of the post to reject") @PathVariable String id) {
         return postService.rejectPost(id);
     }
 
@@ -158,6 +158,6 @@ public class AdminController {
     @DeleteMapping("/posts/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deletePost(@Parameter(description = "ID of the post to delete") @PathVariable Long id) {
-        postService.deletePost(id);
+        postService.deletePost(id.toString());
     }
 }

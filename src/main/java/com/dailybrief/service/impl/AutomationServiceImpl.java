@@ -1,21 +1,5 @@
 package com.dailybrief.service.impl;
 
-import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
-
-import com.dailybrief.dto.AutomationDTO;
-import com.dailybrief.dto.TrendingTopicSuggestionDTO;
-import com.dailybrief.exception.PostNotFoundException;
-import com.dailybrief.mapper.AutomationMapper;
-import com.dailybrief.mapper.TrendingTopicSuggestionMapper;
-import com.dailybrief.model.Automation;
-import com.dailybrief.model.PostStatus;
-import com.dailybrief.model.TrendingTopicSuggestion;
-import com.dailybrief.repository.AutomationRepository;
-import com.dailybrief.repository.TrendingTopicSuggestionRepository;
-import com.dailybrief.service.AutomationService;
-
 import com.dailybrief.dto.MaterialResponseDTO;
 import com.dailybrief.dto.MaterialStatusUpdateDTO;
 import com.dailybrief.dto.RawMaterialResponseDTO;

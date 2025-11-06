@@ -1,74 +1,165 @@
 package com.dailybrief.service.impl;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Service;
-import org.springframework.web.client.HttpStatusCodeException;
-import org.springframework.web.client.ResourceAccessException;
-import org.springframework.web.client.RestTemplate;
-
-import com.dailybrief.dto.AutomationDTO;
-import com.dailybrief.mapper.AutomationMapper;
-import com.dailybrief.model.Automation;
-import com.dailybrief.repository.AutomationRepository;
+import com.dailybrief.dto.MaterialResponseDTO;
+import com.dailybrief.dto.MaterialStatusUpdateDTO;
+import com.dailybrief.dto.RawMaterialResponseDTO;
+import com.dailybrief.dto.RawMaterialUpdateDTO;
+import com.dailybrief.exception.PostNotFoundException;
+import com.dailybrief.exception.RawMaterialNotFoundException;
+import com.dailybrief.mapper.MaterialMapper;
+import com.dailybrief.mapper.RawMaterialMapper;
+import com.dailybrief.model.Material;
+import com.dailybrief.model.RawMaterial;
+import com.dailybrief.model.Status;
+import com.dailybrief.repository.MaterialRepository;
+import com.dailybrief.repository.RawMaterialRepository;
+import com.dailybrief.repository.StatusRepository;
 import com.dailybrief.service.AutomationService;
+
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+import java.util.stream.Collectors;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
 
 @Service
 public class AutomationServiceImpl implements AutomationService {
 
-	private final AutomationRepository repository;
-	private final AutomationMapper mapper;
-	private final RestTemplate restTemplate;
+	private final StatusRepository statusRepository;
+	private final MaterialRepository materialRepository;
+	private final RawMaterialRepository rawMaterialRepository;
+	private final MaterialMapper materialMapper;
+	private final RawMaterialMapper rawMaterialMapper;
 
-	private static final String AUTOMATION_TRIGGER_URL = "http://localhost:8000/trigger-by-id/";
-
-	@Autowired
-	public AutomationServiceImpl(AutomationRepository repository, AutomationMapper mapper) {
-		this.repository = repository;
-		this.mapper = mapper;
-		this.restTemplate = new RestTemplate();
+	public AutomationServiceImpl(StatusRepository statusRepository, MaterialRepository materialRepository,
+			RawMaterialRepository rawMaterialRepository,
+			MaterialMapper materialMapper, RawMaterialMapper rawMaterialMapper) {
+		this.statusRepository = statusRepository;
+		this.materialRepository = materialRepository;
+		this.rawMaterialRepository = rawMaterialRepository;
+		this.materialMapper = materialMapper;
+		this.rawMaterialMapper = rawMaterialMapper;
 	}
 
 	@Override
-	public String saveAutomationRequest(AutomationDTO dto, String jwtToken) {
-		Automation entity = mapper.toEntity(dto);
-
-		System.out.println("CHEGANDO NO SERVICE: " + entity.getOutputFormat());
-		System.out.println("CHEGANDO NO SERVICE THEME: " + entity.getTheme());
-
-		Long id = repository.save(entity).getId();
-
-		String url = AUTOMATION_TRIGGER_URL + id;
-
-		HttpHeaders headers = new HttpHeaders();
-
-		headers.set(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE);
-
-		headers.set(HttpHeaders.AUTHORIZATION, "Bearer " + jwtToken);
-
-		HttpEntity<Void> requestEntity = new HttpEntity<>(headers);
-
-		try {
-
-			ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.GET, requestEntity, String.class);
-
-			return response.getBody();
-		} catch (HttpStatusCodeException e) {
-
-			throw new RuntimeException("Erro ao chamar serviço externo (HTTP Status " + e.getStatusCode() + "): "
-					+ e.getResponseBodyAsString(), e);
-		} catch (ResourceAccessException e) {
-
-			throw new RuntimeException(
-					"Erro ao acessar o serviço externo (conexão recusada ou timeout): " + e.getMessage(), e);
-		} catch (Exception e) {
-
-			throw new RuntimeException("Erro inesperado ao chamar o serviço externo: " + e.getMessage(), e);
-		}
+	public Page<MaterialResponseDTO> getAllMaterials(Pageable pageable) {
+		return materialRepository.findAll(pageable).map(materialMapper::toResponse);
 	}
 
+	@Override
+	public MaterialResponseDTO getMaterialById(String taskId) {
+		Material material = materialRepository.findById(taskId)
+				.orElseThrow(() -> new PostNotFoundException("Material not found with taskId: " + taskId));
+		return materialMapper.toResponse(material);
+	}
+
+	@Override
+	public List<RawMaterialResponseDTO> getRawMaterialsContentByMaterialId(String taskId) {
+
+		Material material = materialRepository.findById(taskId)
+				.orElseThrow(() -> new PostNotFoundException("Material not found with taskId: " + taskId));
+
+		List<String> rawMaterialIds = material.getRawMaterialIds();
+
+		if (rawMaterialIds == null || rawMaterialIds.isEmpty()) {
+			return List.of();
+		}
+
+		List<RawMaterial> rawMaterials = rawMaterialRepository.findAllByIdIn(rawMaterialIds);
+
+		return rawMaterials.stream().map(rawMaterialMapper::toResponse)
+				.collect(Collectors.toList());
+	}
+
+	@Override
+	public RawMaterialResponseDTO getRawMaterialContentById(String rawMaterialId) {
+		RawMaterial rawMaterial = rawMaterialRepository.findById(rawMaterialId).orElseThrow(
+				() -> new RawMaterialNotFoundException("Raw Material not found with id: " + rawMaterialId));
+
+		return rawMaterialMapper.toFullResponse(rawMaterial);
+	}
+
+	@Override
+	@Transactional
+	public RawMaterialResponseDTO updateRawMaterialContent(String rawMaterialId, RawMaterialUpdateDTO updateDTO) {
+
+		RawMaterial rawMaterial = rawMaterialRepository.findById(rawMaterialId)
+				.orElseThrow(() -> new RawMaterialNotFoundException(rawMaterialId));
+
+		rawMaterial.setContent(updateDTO.content());
+
+		RawMaterial updatedRawMaterial = rawMaterialRepository.save(rawMaterial);
+
+		return rawMaterialMapper.toFullResponse(updatedRawMaterial);
+	}
+
+	@Override
+	@Transactional
+	public MaterialResponseDTO updateMaterialStatus(String taskId, MaterialStatusUpdateDTO updateDTO) {
+		Material material = materialRepository.findById(taskId)
+				.orElseThrow(() -> new PostNotFoundException("Material not found with taskId: " + taskId));
+
+		Status newStatus = statusRepository.findById(updateDTO.statusId())
+				.orElseThrow(() -> new PostNotFoundException("Status not found with ID: " + updateDTO.statusId()));
+
+		material.setStatus(newStatus);
+		Material updatedMaterial = materialRepository.save(material);
+
+		return materialMapper.toResponse(updatedMaterial);
+	}
+
+	@Override
+	@Transactional(readOnly = true)
+	public List<RawMaterialResponseDTO> searchRawMaterials(String query) {
+		if (query == null || query.isBlank()) {
+			return List.of();
+		}
+
+		List<RawMaterial> rawMaterials = rawMaterialRepository
+				.findByContentContainingIgnoreCaseOrUrlContainingIgnoreCase(query, query);
+
+		return rawMaterials.stream()
+				.map(rawMaterialMapper::toResponse)
+				.collect(Collectors.toList());
+	}
+
+	@Override
+	@Transactional(readOnly = true)
+	public String exportRawMaterials(String format) {
+		List<RawMaterial> allRawMaterials = rawMaterialRepository.findAll();
+
+		switch (format.toLowerCase()) {
+			case "csv":
+
+				String csvHeader = "ID,URL,Content_Preview,CreatedAt\n";
+				String csvBody = allRawMaterials.stream()
+						.map(rm -> String.format("\"%s\",\"%s\",\"%s\",\"%s\"",
+								rm.getId(),
+								rm.getUrl(),
+
+								rawMaterialMapper.truncateContent(rm.getContent()),
+								rm.getCreatedAt()))
+						.collect(Collectors.joining("\n"));
+				return csvHeader + csvBody;
+
+			case "json":
+
+				return allRawMaterials.stream()
+						.map(rawMaterialMapper::toFullResponse)
+						.collect(Collectors.toList())
+						.toString();
+
+			case "txt":
+				return allRawMaterials.stream()
+						.map(rm -> "ID: " + rm.getId() + "\nURL: " + rm.getUrl() + "\nContent:\n" + rm.getContent()
+								+ "\n---\n")
+						.collect(Collectors.joining());
+
+			default:
+				throw new IllegalArgumentException("Formato de exportação inválido: " + format);
+		}
+	}
 }

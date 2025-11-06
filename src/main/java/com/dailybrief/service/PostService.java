@@ -2,6 +2,7 @@ package com.dailybrief.service;
 
 import com.dailybrief.dto.PostRequestDTO;
 import com.dailybrief.dto.PostResponseDTO;
+
 import com.dailybrief.dto.LocalizedPostResponseDTO;
 
 import org.springframework.data.domain.Page;
@@ -14,13 +15,15 @@ public interface PostService {
 
     Page<LocalizedPostResponseDTO> getAllPostsLocalized(Pageable pageable);
 
-    PostResponseDTO getPostById(Long id);
+    PostResponseDTO getPostById(String id);
 
-    PostResponseDTO updatePost(Long id, PostRequestDTO postRequest);
+    PostResponseDTO updatePost(String id, PostRequestDTO postRequest);
 
-    PostResponseDTO approvePost(Long id);
+    PostResponseDTO approvePost(String id);
 
-    PostResponseDTO rejectPost(Long id);
+    PostResponseDTO rejectPost(String id);
 
-    void deletePost(Long id);
+    void deletePost(String id);
+
+    // Mono<Post> saveGeneratedPost(FinalPostSubmissionRequestDTO requestDTO);
 }

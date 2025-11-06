@@ -6,11 +6,11 @@ import com.dailybrief.dto.PostResponseDTO;
 import com.dailybrief.exception.PostNotFoundException;
 import com.dailybrief.mapper.PostMapper;
 import com.dailybrief.model.Post;
-import com.dailybrief.model.PostStatus;
+import com.dailybrief.model.Status;
 import com.dailybrief.repository.PostRepository;
+import com.dailybrief.repository.StatusRepository;
 import com.dailybrief.service.PostService;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.data.domain.Page;
@@ -19,91 +19,114 @@ import org.springframework.data.domain.Pageable;
 @Service
 public class PostServiceImpl implements PostService {
 
-    private final PostRepository postRepository;
-    private final PostMapper postMapper;
+        private final PostRepository postRepository;
+        private final PostMapper postMapper;
+        private final StatusRepository statusRepository;
 
-    @Autowired
-    public PostServiceImpl(PostRepository postRepository, PostMapper postMapper) {
-        this.postRepository = postRepository;
-        this.postMapper = postMapper;
-    }
-
-    @Override
-    @Transactional
-    public PostResponseDTO createPost(PostRequestDTO postRequest) {
-        Post post = postMapper.toEntity(postRequest);
-        post.setStatus(PostStatus.PENDING); // Default
-        if (post.getReadTime() == null) {
-            post.setReadTime(estimateReadTime(postRequest.content().getOrDefault("pt", "")));
+        public PostServiceImpl(PostRepository postRepository, PostMapper postMapper,
+                        StatusRepository statusRepository) {
+                this.postRepository = postRepository;
+                this.postMapper = postMapper;
+                this.statusRepository = statusRepository;
         }
-        Post savedPost = postRepository.save(post);
-        return postMapper.toResponse(savedPost);
-    }
 
-    @Override
-    public Page<PostResponseDTO> getAllPosts(Pageable pageable) {
-        return postRepository.findAll(pageable).map(postMapper::toResponse);
-    }
+        @Override
+        @Transactional
+        public PostResponseDTO createPost(PostRequestDTO postRequest) {
+                Integer STATUS_PENDING_ID = 10;
+                Post post = postMapper.toEntity(postRequest);
 
-    @Override
-    public Page<LocalizedPostResponseDTO> getAllPostsLocalized(Pageable pageable) {
-        return postRepository.findAll(pageable).map(postMapper::toLocalizedResponse);
-    }
+                Status defaultStatus = statusRepository.findById(STATUS_PENDING_ID)
+                                .orElseThrow(() -> new IllegalStateException(
+                                                "Status with ID " + STATUS_PENDING_ID + " not found"));
+                post.setStatus(defaultStatus);
 
-    @Override
-    public PostResponseDTO getPostById(Long id) {
-        Post post = postRepository.findById(id)
-                .orElseThrow(() -> new PostNotFoundException("Post with id " + id + " not found"));
-        return postMapper.toResponse(post);
-    }
+                if (post.getReadTime() == null) {
+                        post.setReadTime(estimateReadTime(postRequest.content().getOrDefault("pt", "")));
+                }
 
-    @Override
-    @Transactional
-    public PostResponseDTO updatePost(Long id, PostRequestDTO postRequest) {
-        Post post = postRepository.findById(id)
-                .orElseThrow(() -> new PostNotFoundException("Post with id " + id + " not found"));
-        Post updatedPost = postMapper.toEntity(postRequest);
-        updatedPost.setId(id);
-        updatedPost.setStatus(post.getStatus());
-        if (updatedPost.getReadTime() == null) {
-            updatedPost.setReadTime(estimateReadTime(postRequest.content().getOrDefault("pt", "")));
+                Post savedPost = postRepository.save(post);
+                return postMapper.toResponse(savedPost);
         }
-        Post savedPost = postRepository.save(updatedPost);
-        return postMapper.toResponse(savedPost);
-    }
 
-    @Override
-    @Transactional
-    public PostResponseDTO approvePost(Long id) {
-        Post post = postRepository.findById(id)
-                .orElseThrow(() -> new PostNotFoundException("Post with id " + id + " not found"));
-        post.setStatus(PostStatus.APPROVED);
-        Post savedPost = postRepository.save(post);
-        return postMapper.toResponse(savedPost);
-    }
-
-    @Override
-    @Transactional
-    public PostResponseDTO rejectPost(Long id) {
-        Post post = postRepository.findById(id)
-                .orElseThrow(() -> new PostNotFoundException("Post with id " + id + " not found"));
-        post.setStatus(PostStatus.REJECTED);
-        Post savedPost = postRepository.save(post);
-        return postMapper.toResponse(savedPost);
-    }
-
-    @Override
-    @Transactional
-    public void deletePost(Long id) {
-        if (!postRepository.existsById(id)) {
-            throw new PostNotFoundException("Post with id " + id + " not found");
+        @Override
+        public Page<PostResponseDTO> getAllPosts(Pageable pageable) {
+                return postRepository.findAll(pageable).map(postMapper::toResponse);
         }
-        postRepository.deleteById(id);
-    }
 
-    private String estimateReadTime(String content) {
-        int words = content.split("\\s+").length;
-        int minutes = (int) Math.ceil(words / 200.0);
-        return minutes + " min";
-    }
+        @Override
+        public Page<LocalizedPostResponseDTO> getAllPostsLocalized(Pageable pageable) {
+                return postRepository.findAll(pageable).map(postMapper::toLocalizedResponse);
+        }
+
+        @Override
+        public PostResponseDTO getPostById(String id) {
+                Post post = postRepository.findById(id)
+                                .orElseThrow(() -> new PostNotFoundException("Post with id " + id + " not found"));
+                return postMapper.toResponse(post);
+        }
+
+        @Override
+        @Transactional
+        public PostResponseDTO updatePost(String id, PostRequestDTO postRequest) {
+                Post post = postRepository.findById(id)
+                                .orElseThrow(() -> new PostNotFoundException("Post with id " + id + " not found"));
+
+                Post updatedPost = postMapper.toEntity(postRequest);
+                updatedPost.setId(id);
+                updatedPost.setStatus(post.getStatus()); // mantém o status existente
+
+                if (updatedPost.getReadTime() == null) {
+                        updatedPost.setReadTime(estimateReadTime(postRequest.content().getOrDefault("pt", "")));
+                }
+
+                Post savedPost = postRepository.save(updatedPost);
+                return postMapper.toResponse(savedPost);
+        }
+
+        @Override
+        @Transactional
+        public PostResponseDTO approvePost(String id) {
+                Integer STATUS_APPROVED_ID = 15;
+                Post post = postRepository.findById(id)
+                                .orElseThrow(() -> new PostNotFoundException("Post with id " + id + " not found"));
+
+                Status approvedStatus = statusRepository.findById(STATUS_APPROVED_ID)
+                                .orElseThrow(() -> new IllegalStateException("Status with ID 15 not found"));
+
+                post.setStatus(approvedStatus);
+                Post savedPost = postRepository.save(post);
+                return postMapper.toResponse(savedPost);
+        }
+
+        @Override
+        @Transactional
+        public PostResponseDTO rejectPost(String id) {
+                Integer STATUS_REJECTED_ID = 16;
+                Post post = postRepository.findById(id)
+                                .orElseThrow(() -> new PostNotFoundException("Post with id " + id + " not found"));
+
+                Status rejectedStatus = statusRepository.findById(STATUS_REJECTED_ID)
+                                .orElseThrow(() -> new IllegalStateException(
+                                                "Status with ID " + STATUS_REJECTED_ID + " not found"));
+
+                post.setStatus(rejectedStatus);
+                Post savedPost = postRepository.save(post);
+                return postMapper.toResponse(savedPost);
+        }
+
+        @Override
+        @Transactional
+        public void deletePost(String id) {
+                if (!postRepository.existsById(id)) {
+                        throw new PostNotFoundException("Post with id " + id + " not found");
+                }
+                postRepository.deleteById(id);
+        }
+
+        private String estimateReadTime(String content) {
+                int words = content.split("\\s+").length;
+                int minutes = (int) Math.ceil(words / 200.0);
+                return minutes + " min";
+        }
 }

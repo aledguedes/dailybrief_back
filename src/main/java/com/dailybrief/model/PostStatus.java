@@ -1,5 +1,5 @@
 package com.dailybrief.model;
 
 public enum PostStatus {
-    PENDING, APPROVED, REJECTED, DRAFT
+    PENDING, APPROVED, REJECTED, DRAFT, NEW
 }

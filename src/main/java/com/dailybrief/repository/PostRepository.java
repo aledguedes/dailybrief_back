@@ -10,10 +10,12 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public interface PostRepository extends JpaRepository<Post, Long> {
+public interface PostRepository extends JpaRepository<Post, String> {
     long count();
- // long countAll();
+
+    // long countAll();
     long countByStatus(PostStatus status);
+
     List<Post> findAllByOrderByPublishedAtDesc(Pageable pageable);
 
     // Se no futuro você precisar de contagens por status, pode adicionar:

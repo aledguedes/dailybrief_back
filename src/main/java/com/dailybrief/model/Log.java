@@ -8,7 +8,7 @@ import org.hibernate.type.SqlTypes;
 
 @Entity
 @Data
-@Table(name = "tbl_log")
+@Table(name = "tbl_logs")
 public class Log {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

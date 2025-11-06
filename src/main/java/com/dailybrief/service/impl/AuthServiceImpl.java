@@ -6,6 +6,9 @@ import com.dailybrief.model.User;
 import com.dailybrief.repository.UserRepository;
 import com.dailybrief.service.AuthService;
 import com.dailybrief.config.JwtTokenProvider;
+
+import java.util.Optional;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -24,11 +27,16 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public LoginResponseDTO login(LoginRequestDTO loginRequest) {
-        User user = userRepository.findByEmail(loginRequest.email());
-        if (user != null && passwordEncoder.matches(loginRequest.password(), user.getPassword())) {
-            String token = jwtTokenProvider.generateToken(user.getEmail());
-            return new LoginResponseDTO(token);
+        Optional<User> userOptional = userRepository.findByEmail(loginRequest.email());
+        
+        if (userOptional.isPresent()) {
+            User user = userOptional.get();
+            if (passwordEncoder.matches(loginRequest.password(), user.getPassword())) {
+                String token = jwtTokenProvider.generateToken(user.getEmail());
+                return new LoginResponseDTO(token);
+            }
         }
+        
         throw new RuntimeException("Invalid credentials");
     }
 }

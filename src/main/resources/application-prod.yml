@@ -1,9 +1,15 @@
 spring:
   datasource:
-    url: jdbc:postgresql://localhost:5432/dailybrief
-    username: postgres
-    password: yourpassword
+    url: ${DATABASE_URL}
+    username: ${DATABASE_USERNAME}
+    password: ${DATABASE_PASSWORD}
   jpa:
     hibernate:
       ddl-auto: update
     database-platform: org.hibernate.dialect.PostgreSQLDialect
+  sql:
+    init:
+      mode: always
+
+server:
+  port: ${PORT:8080}

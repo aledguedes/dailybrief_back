@@ -27,8 +27,8 @@ public class Material {
     @Column(name = "post_id", length = 255)
     private String postId;
 
-    @Lob
-    @Column(name = "theme")
+//    @Lob
+    @Column(name = "theme", columnDefinition = "varchar")
     private String theme;
 
     @Column(name = "content_type", length = 255)

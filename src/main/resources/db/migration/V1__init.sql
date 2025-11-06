@@ -24,8 +24,8 @@ CREATE TABLE tbl_status (
 CREATE TABLE tbl_categories (
     id SERIAL PRIMARY KEY,
     name VARCHAR(100) UNIQUE NOT NULL,
-    display_name VARCHAR(100),
-    description TEXT
+    description VARCHAR(255),
+    target_audience VARCHAR(50)
 );
 
 -- =========================
@@ -177,17 +177,17 @@ INSERT INTO tbl_status (id, name, display_name, bg_class, text_class) VALUES
 (16, 'REJECTED', 'Rejeitado', 'bg-red-300', 'text-red-900')
 ON CONFLICT (id) DO NOTHING;
 
-INSERT INTO tbl_categories (id, name, display_name, description) VALUES
-(1, 'TECH', 'Tecnologia', 'Notícias e tendências sobre inovação, IA, gadgets e avanços tecnológicos.'),
-(2, 'BUSINESS', 'Negócios', 'Análises de mercado, startups, economia e empreendedorismo.'),
-(3, 'SCIENCE', 'Ciência', 'Descobertas científicas, pesquisas e inovações no campo científico.'),
-(4, 'POLITICS', 'Política', 'Atualizações sobre governos, eleições e geopolítica global.'),
-(5, 'HEALTH', 'Saúde', 'Artigos sobre bem-estar, medicina, alimentação e saúde mental.'),
-(6, 'ENVIRONMENT', 'Meio Ambiente', 'Sustentabilidade, mudanças climáticas e energia limpa.'),
-(7, 'CULTURE', 'Cultura', 'Entretenimento, arte, cinema, música e sociedade.'),
-(8, 'SPORTS', 'Esportes', 'Cobertura e análises esportivas nacionais e internacionais.'),
-(9, 'TECH_POLICY', 'Tecnologia & Política', 'Debates sobre regulação tecnológica, privacidade e ética digital.'),
-(10, 'AI', 'Inteligência Artificial', 'Conteúdo sobre IA, aprendizado de máquina e automação.')
-ON CONFLICT (name) DO NOTHING;
+INSERT INTO tbl_categories (id, name, description, target_audience) VALUES
+(1, 'TECH', 'Notícias e tendências sobre inovação, IA, gadgets e avanços tecnológicos.', 'MISTO'),
+(2, 'BUSINESS', 'Análises de mercado, startups, economia e empreendedorismo.', 'MISTO'),
+(3, 'SCIENCE', 'Descobertas científicas, pesquisas e inovações no campo científico.', 'LEIGO'),
+(4, 'POLITICS', 'Atualizações sobre governos, eleições e geopolítica global.', 'MISTO'),
+(5, 'HEALTH', 'Artigos sobre bem-estar, medicina, alimentação e saúde mental.', 'LEIGO'),
+(6, 'ENVIRONMENT', 'Sustentabilidade, mudanças climáticas e energia limpa.', 'MISTO'),
+(7, 'CULTURE', 'Entretenimento, arte, cinema, música e sociedade.', 'MISTO'),
+(8, 'SPORTS', 'Cobertura e análises esportivas nacionais e internacionais.', 'LEIGO'),
+(9, 'TECH_POLICY', 'Debates sobre regulação tecnológica, privacidade e ética digital.', 'TÉCNICO'),
+(10, 'AI', 'Conteúdo sobre IA, aprendizado de máquina e automação.', 'TÉCNICO')
+ON CONFLICT (id) DO NOTHING;
 
 

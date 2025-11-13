@@ -20,14 +20,17 @@ public class RawMaterial {
 	@JoinColumn(name = "task_id", nullable = false)
 	private Material material;
 
-//	@Lob
+	// @Lob
 	@Column(name = "url", nullable = false)
 	private String url;
 
-//    @Lob
+	// @Lob
 	@Column(name = "content", nullable = false)
 	private String content;
 
 	@Column(name = "created_at", nullable = false)
 	private ZonedDateTime createdAt;
+
+	@Column(name = "updated_at", nullable = false)
+	private ZonedDateTime updatedAt;
 }

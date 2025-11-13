@@ -7,6 +7,8 @@ import com.dailybrief.dto.RawMaterialUpdateDTO;
 import com.dailybrief.service.AutomationService;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
@@ -15,7 +17,11 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -87,66 +93,97 @@ public class AutomationController {
 	}
 
 	@Operation(summary = "Atualiza o status de um Material", description = "Muda o status do material, recebendo o ID do novo status, e retorna o material atualizado.")
-	@ApiResponses({
-			@ApiResponse(responseCode = "200", description = "Status atualizado com sucesso"),
+	@ApiResponses({ @ApiResponse(responseCode = "200", description = "Status atualizado com sucesso"),
 			@ApiResponse(responseCode = "400", description = "ID de Status inválido ou erro de validação"),
-			@ApiResponse(responseCode = "404", description = "Material ou Status não encontrado")
-	})
+			@ApiResponse(responseCode = "404", description = "Material ou Status não encontrado") })
 	@PutMapping("/materials/{taskId}/status")
-	public ResponseEntity<MaterialResponseDTO> updateMaterialStatus(
-			@PathVariable String taskId,
+	public ResponseEntity<MaterialResponseDTO> updateMaterialStatus(@PathVariable String taskId,
 			@RequestBody @Valid MaterialStatusUpdateDTO updateDTO) {
 
 		MaterialResponseDTO updatedMaterial = automationService.updateMaterialStatus(taskId, updateDTO);
 		return ResponseEntity.ok(updatedMaterial);
 	}
 
+	@Operation(summary = "Atualiza o prompt para geração de imagem via IA", description = "Atualiza o prompt para geração de imagem via IA, recebendo o ID do material e o novo prompt, e retorna o material atualizado.")
+	@ApiResponses({ @ApiResponse(responseCode = "200", description = "Prompt da Imagem atualizado com sucesso"),
+			@ApiResponse(responseCode = "400", description = "ID do Material inválido ou erro de validação"),
+			@ApiResponse(responseCode = "404", description = "Material não encontrado") })
+	@PutMapping("/materials/{taskId}/prompt-image")
+	public ResponseEntity<MaterialResponseDTO> updateSuggestedImagePrompt(@PathVariable String taskId,
+			@RequestBody @Valid String prompt) {
+
+		MaterialResponseDTO updatedMaterial = automationService.updateSuggestedImagePrompt(taskId, prompt);
+		return ResponseEntity.ok(updatedMaterial);
+	}
+
 	@Operation(summary = "Busca por conteúdo ou URL em RawMaterials", description = "Retorna RawMaterials cujos campos content ou url contêm o termo de busca (parâmetro 'query').")
-	@ApiResponses({
-			@ApiResponse(responseCode = "200", description = "Resultados da busca recuperados com sucesso")
-	})
+	@ApiResponses({ @ApiResponse(responseCode = "200", description = "Resultados da busca recuperados com sucesso") })
 	@GetMapping("/raw-materials/search")
-	public ResponseEntity<List<RawMaterialResponseDTO>> searchRawMaterials(
-			@RequestParam String query) {
+	public ResponseEntity<List<RawMaterialResponseDTO>> searchRawMaterials(@RequestParam String query) {
 
 		List<RawMaterialResponseDTO> results = automationService.searchRawMaterials(query);
 		return ResponseEntity.ok(results);
 	}
 
-	@Operation(summary = "Exportar todos os RawMaterials", description = "Exporta todos os dados brutos nos formatos CSV, JSON ou TXT (parâmetro 'format'). Formato padrão: CSV.")
-	@ApiResponses({
-			@ApiResponse(responseCode = "200", description = "Arquivo gerado e retornado com sucesso"),
-			@ApiResponse(responseCode = "400", description = "Formato de exportação inválido")
-	})
-	@GetMapping("/raw-materials/export")
+	@Operation(summary = "Exportar RawMaterials por Task ID", description = "Exporta os dados brutos (RawMaterials) associados a uma Task específica, nos formatos CSV, JSON ou TXT (parâmetro 'format'). O ID da Task é passado na URL. Formato padrão: CSV.")
+	@ApiResponses({ @ApiResponse(responseCode = "200", description = "Arquivo gerado e retornado com sucesso"),
+			@ApiResponse(responseCode = "400", description = "Formato de exportação inválido ou problemas no ID da Task"),
+			@ApiResponse(responseCode = "404", description = "Task (Material) não encontrada para o ID fornecido") })
+	@GetMapping("/raw-materials/{taskId}/export")
 	public ResponseEntity<String> exportRawMaterials(
+			@PathVariable @Parameter(description = "ID da Task (Material) para filtrar as RawMaterials.") String taskId,
 			@RequestParam(defaultValue = "csv") String format) {
 
-		String exportedData = automationService.exportRawMaterials(format);
+		String exportedData = automationService.exportRawMaterials(taskId, format);
 
 		MediaType mediaType;
 		String extension;
 
 		switch (format.toLowerCase()) {
-			case "json":
-				mediaType = MediaType.APPLICATION_JSON;
-				extension = "json";
-				break;
-			case "txt":
-				mediaType = MediaType.TEXT_PLAIN;
-				extension = "txt";
-				break;
-			case "csv":
-			default:
-				mediaType = MediaType.parseMediaType("text/csv");
-				extension = "csv";
-				break;
+		case "json":
+			mediaType = MediaType.APPLICATION_JSON;
+			extension = "json";
+			break;
+		case "txt":
+			mediaType = MediaType.TEXT_PLAIN;
+			extension = "txt";
+			break;
+		case "csv":
+		default:
+			mediaType = MediaType.parseMediaType("text/csv");
+			extension = "csv";
+			break;
 		}
 
-		return ResponseEntity.ok()
-				.contentType(mediaType)
+		return ResponseEntity.ok().contentType(mediaType)
 				.header(HttpHeaders.CONTENT_DISPOSITION,
-						"attachment; filename=\"raw_materials_export." + extension + "\"")
+						"attachment; filename=\"" + taskId + "_raw_materials_export." + extension + "\"")
 				.body(exportedData);
+	}
+
+	@Operation(summary = "Faz upload de uma imagem para o Cloudinary", description = "Recebe um arquivo via multipart e faz upload para o Cloudinary, retornando informações como URL e public_id.")
+	@ApiResponses({ @ApiResponse(responseCode = "200", description = "Imagem enviada com sucesso"),
+			@ApiResponse(responseCode = "500", description = "Erro ao fazer upload da imagem", content = @Content) })
+	@PostMapping(value = "/images/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+	public ResponseEntity<?> uploadImage(
+			@Parameter(description = "Arquivo de imagem a ser enviado", required = true) @RequestPart("file") MultipartFile file,
+			@PathVariable String taskId) {
+
+		Map<String, Object> options = new HashMap<>();
+		options.put("folder", "blog");
+
+		Map<?, ?> uploadResult = automationService.upload(file, options, taskId);
+		return ResponseEntity.ok(uploadResult);
+	}
+
+	@Operation(summary = "Deleta uma imagem do Cloudinary", description = "Exclui a imagem do Cloudinary a partir do public_id fornecido.")
+	@ApiResponses({ @ApiResponse(responseCode = "200", description = "Imagem deletada com sucesso"),
+			@ApiResponse(responseCode = "500", description = "Erro ao deletar a imagem", content = @Content) })
+	@DeleteMapping("/images/{publicId}")
+	public ResponseEntity<?> deleteImage(
+			@Parameter(description = "public_id da imagem a ser deletada", required = true) @PathVariable String publicId) {
+
+		Map<?, ?> result = automationService.destroy(publicId, null);
+		return ResponseEntity.ok(result);
 	}
 }

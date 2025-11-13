@@ -6,9 +6,11 @@ import com.dailybrief.dto.RawMaterialResponseDTO;
 import com.dailybrief.dto.RawMaterialUpdateDTO;
 
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.web.multipart.MultipartFile;
 
 public interface AutomationService {
 	Page<MaterialResponseDTO> getAllMaterials(Pageable pageable);
@@ -25,5 +27,11 @@ public interface AutomationService {
 
 	List<RawMaterialResponseDTO> searchRawMaterials(String query);
 
-	String exportRawMaterials(String format);
+	String exportRawMaterials(String taskId, String format);
+
+	MaterialResponseDTO updateSuggestedImagePrompt(String taskId, String prompt);
+
+	Map<?, ?> upload(MultipartFile file, Map<String, Object> options, String postId);
+
+	Map<?, ?> destroy(String publicId, Map<String, Object> options);
 }

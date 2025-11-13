@@ -36,7 +36,6 @@ CREATE TABLE tbl_posts (
     image VARCHAR(255),
     author VARCHAR(255),
 
-    -- novos relacionamentos
     category_id INTEGER REFERENCES tbl_categories(id) ON DELETE SET NULL,
     status_id INTEGER REFERENCES tbl_status(id) ON DELETE SET NULL,
 
@@ -47,9 +46,18 @@ CREATE TABLE tbl_posts (
 );
 
 -- =========================
+-- TABELA DE IMAGENS
+-- =========================
+CREATE TABLE tbl_images (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    url VARCHAR(255) NOT NULL,
+    public_id VARCHAR(255) NOT NULL UNIQUE,
+    post_id VARCHAR(36) REFERENCES tbl_posts(id) ON DELETE CASCADE
+);
+
+-- =========================
 -- TABELAS DE CONTEÚDO MULTILÍNGUE
 -- =========================
-
 CREATE TABLE tbl_post_title (
     post_id VARCHAR(36),
     lang VARCHAR(10),
@@ -189,5 +197,3 @@ INSERT INTO tbl_categories (id, name, description, target_audience) VALUES
 (9, 'TECH_POLICY', 'Debates sobre regulação tecnológica, privacidade e ética digital.', 'TÉCNICO'),
 (10, 'AI', 'Conteúdo sobre IA, aprendizado de máquina e automação.', 'TÉCNICO')
 ON CONFLICT (id) DO NOTHING;
-
-

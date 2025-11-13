@@ -2,6 +2,7 @@ package com.dailybrief.mapper;
 
 import com.dailybrief.dto.*;
 import com.dailybrief.dto.dashboard.DashboardPostResponseDTO;
+import com.dailybrief.model.Image;
 import com.dailybrief.model.Post;
 import com.dailybrief.model.Category;
 import com.dailybrief.model.Status;
@@ -20,23 +21,27 @@ public class PostMapper {
 		post.setTitle(postRequest.title());
 		post.setExcerpt(postRequest.excerpt());
 		post.setContent(postRequest.content());
-		post.setImage(postRequest.image());
 		post.setAuthor(postRequest.author());
 		post.setTags(postRequest.tags());
 		post.setMetaDescription(postRequest.metaDescription());
 		post.setAffiliateLinks(postRequest.affiliateLinks());
-		// categoria e status serão atribuídos no service
+		// category e status serão atribuídos no service
+		// imagens também serão associadas no service
 		return post;
 	}
 
 	// ---------- CONVERSÃO DE ENTIDADE PARA RESPONSE ----------
 	public PostResponseDTO toResponse(Post post) {
+		List<ImageResponseDTO> images = post.getImages().stream()
+				.map(this::toImageResponseDTO)
+				.collect(Collectors.toList());
+
 		return new PostResponseDTO(
 				post.getId(),
 				post.getTitle(),
 				post.getExcerpt(),
 				post.getContent(),
-				post.getImage(),
+				images, // agora é lista
 				post.getAuthor(),
 				post.getTags(),
 				post.getCategory() != null ? toCategoryResponseDTO(post.getCategory()) : null,
@@ -49,52 +54,12 @@ public class PostMapper {
 				post.getUpdatedAt() != null ? post.getUpdatedAt().toString() : null);
 	}
 
-	public List<PostResponseDTO> toResponseList(List<Post> posts) {
-		return posts.stream().map(this::toResponse).collect(Collectors.toList());
-	}
-
-	// ---------- CONVERSÃO PARA LOCALIZED RESPONSE ----------
-	public LocalizedPostResponseDTO toLocalizedResponse(Post post) {
-		String lang = getPreferredLanguage();
-
-		return new LocalizedPostResponseDTO(
-				post.getId(),
-				post.getTitle().getOrDefault(lang, post.getTitle().getOrDefault("pt", "")),
-				post.getExcerpt().getOrDefault(lang, post.getExcerpt().getOrDefault("pt", "")),
-				post.getContent().getOrDefault(lang, post.getContent().getOrDefault("pt", "")),
-				post.getImage(),
-				post.getAuthor(),
-				post.getTags(),
-				post.getCategory() != null ? post.getCategory().getName() : null,
-				post.getMetaDescription().getOrDefault(lang, post.getMetaDescription().getOrDefault("pt", "")),
-				post.getAffiliateLinks().getOrDefault(lang, post.getAffiliateLinks().getOrDefault("pt", "")),
-				post.getStatus() != null ? post.getStatus().getName() : null,
-				post.getPublishedAt() != null ? post.getPublishedAt().toString() : null,
-				post.getReadTime());
-	}
-
-	public List<LocalizedPostResponseDTO> toLocalizedResponseList(List<Post> posts) {
-		return posts.stream().map(this::toLocalizedResponse).collect(Collectors.toList());
-	}
-
-	// ---------- DASHBOARD POST RESPONSE ----------
-	public DashboardPostResponseDTO toDashboardPostResponse(Post post) {
-		return new DashboardPostResponseDTO(
-				post.getId(),
-				post.getImage(),
-				post.getTitle(),
-				post.getExcerpt(),
-				post.getStatus() != null ? post.getStatus().getName() : null,
-				post.getCategory() != null ? post.getCategory().getName() : null);
-	}
-
 	// ---------- AUXILIARES ----------
-	private String getPreferredLanguage() {
-		String lang = LocaleContextHolder.getLocale().getLanguage();
-		return switch (lang) {
-			case "en", "pt", "es" -> lang;
-			default -> "pt";
-		};
+	private ImageResponseDTO toImageResponseDTO(Image image) {
+		return new ImageResponseDTO(
+				image.getId(),
+				image.getUrl(),
+				image.getPublicId());
 	}
 
 	private CategoryResponseDTO toCategoryResponseDTO(Category category) {
@@ -112,5 +77,63 @@ public class PostMapper {
 				status.getDisplayName(),
 				status.getBgClass(),
 				status.getTextClass());
+	}
+
+	@SuppressWarnings("unused")
+	private String getPreferredLanguage() {
+		String lang = LocaleContextHolder.getLocale().getLanguage();
+		return switch (lang) {
+			case "en", "pt", "es" -> lang;
+			default -> "pt";
+		};
+	}
+
+	public LocalizedPostResponseDTO toLocalizedResponse(Post post) {
+		if (post == null)
+			return null;
+
+		String lang = getPreferredLanguage();
+
+		List<String> imageUrls = post.getImages() != null
+				? post.getImages().stream()
+						.map(Image::getUrl)
+						.collect(Collectors.toList())
+				: List.of();
+
+		return new LocalizedPostResponseDTO(
+				post.getId(),
+				post.getTitle().getOrDefault(lang, post.getTitle().getOrDefault("pt", "")),
+				post.getExcerpt().getOrDefault(lang, post.getExcerpt().getOrDefault("pt", "")),
+				post.getContent().getOrDefault(lang, post.getContent().getOrDefault("pt", "")),
+				imageUrls,
+				post.getAuthor(),
+				post.getTags(),
+				post.getCategory() != null ? post.getCategory().getName() : null,
+				post.getMetaDescription().getOrDefault(lang, post.getMetaDescription().getOrDefault("pt", "")),
+				post.getAffiliateLinks().getOrDefault(lang, post.getAffiliateLinks().getOrDefault("pt", "")),
+				post.getStatus() != null ? post.getStatus().getName() : null,
+				post.getPublishedAt() != null ? post.getPublishedAt().toString() : null,
+				post.getReadTime());
+	}
+
+	public List<LocalizedPostResponseDTO> toLocalizedResponseList(List<Post> posts) {
+		return posts.stream().map(this::toLocalizedResponse).collect(Collectors.toList());
+	}
+
+	public DashboardPostResponseDTO toDashboardPostResponse(Post post) {
+		String featuredImageUrl = null;
+
+		if (post.getImages() != null && !post.getImages().isEmpty()) {
+			// Pega a primeira imagem como destaque
+			featuredImageUrl = post.getImages().get(0).getUrl();
+		}
+
+		return new DashboardPostResponseDTO(
+				post.getId(),
+				featuredImageUrl,
+				post.getTitle(),
+				post.getExcerpt(),
+				post.getStatus() != null ? post.getStatus().getName() : null,
+				post.getCategory() != null ? post.getCategory().getName() : null);
 	}
 }

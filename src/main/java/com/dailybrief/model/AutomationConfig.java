@@ -19,7 +19,7 @@ public class AutomationConfig {
 
     @Lob
     @Column(name = "search_factors", nullable = false)
-    private String searchFactors; // Mapeado como String, considere JSONB com libs específicas se necessário
+    private String searchFactors;
 
     @Column(name = "created_at", nullable = false)
     private ZonedDateTime createdAt;

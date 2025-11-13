@@ -25,3 +25,6 @@ EXPOSE 8080
 
 # Comando de inicialização
 CMD ["java", "-jar", "app.jar"]
+
+ENV CLOUDINARY_URL=cloudinary://445736445162696:FAbyY1JZcagy1PzwCzvf0EsFtBs@droxfew60
+

@@ -20,19 +20,19 @@ public class Post {
 	@Column(name = "id", length = 36)
 	private String id;
 
-	@Column(name = "image")
-	private String image;
+	@OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
+	private List<Image> images = new ArrayList<>();
 
 	@Column(name = "author")
 	private String author;
 
 	@ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "category_id")
-    private Category category; 
+	@JoinColumn(name = "category_id")
+	private Category category;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "status_id")
-    private Status status;
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "status_id")
+	private Status status;
 
 	@Column(name = "published_at")
 	private Timestamp publishedAt;

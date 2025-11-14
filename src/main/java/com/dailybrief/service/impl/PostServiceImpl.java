@@ -5,7 +5,6 @@ import com.dailybrief.dto.PostRequestDTO;
 import com.dailybrief.dto.PostResponseDTO;
 import com.dailybrief.exception.PostNotFoundException;
 import com.dailybrief.mapper.PostMapper;
-import com.dailybrief.model.Image;
 import com.dailybrief.model.Post;
 import com.dailybrief.model.Status;
 import com.dailybrief.repository.ImageRepository;
@@ -16,9 +15,6 @@ import com.dailybrief.service.PostService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
-import java.util.UUID;
-
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -26,14 +22,12 @@ import org.springframework.data.domain.Pageable;
 public class PostServiceImpl implements PostService {
 
 	private final PostRepository postRepository;
-	private final ImageRepository imageRepository;
 	private final PostMapper postMapper;
 	private final StatusRepository statusRepository;
 
 	public PostServiceImpl(PostRepository postRepository, ImageRepository imageRepository, PostMapper postMapper,
 			StatusRepository statusRepository) {
 		this.postRepository = postRepository;
-		this.imageRepository = imageRepository;
 		this.postMapper = postMapper;
 		this.statusRepository = statusRepository;
 	}

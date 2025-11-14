@@ -20,13 +20,16 @@ import com.dailybrief.dto.RawMaterialUpdateDTO;
 import com.dailybrief.exception.PostNotFoundException;
 import com.dailybrief.exception.RawMaterialNotFoundException;
 import com.dailybrief.mapper.MaterialMapper;
+import com.dailybrief.mapper.MaterialSourceMapper;
 import com.dailybrief.mapper.RawMaterialMapper;
 import com.dailybrief.model.Image;
 import com.dailybrief.model.Material;
+import com.dailybrief.model.MaterialSource;
 import com.dailybrief.model.Post;
 import com.dailybrief.model.RawMaterial;
 import com.dailybrief.model.Status;
 import com.dailybrief.repository.MaterialRepository;
+import com.dailybrief.repository.MaterialSourceRepository;
 import com.dailybrief.repository.PostRepository;
 import com.dailybrief.repository.RawMaterialRepository;
 import com.dailybrief.repository.StatusRepository;
@@ -40,32 +43,39 @@ public class AutomationServiceImpl implements AutomationService {
 	private final Cloudinary cloudinary;
 	private final StatusRepository statusRepository;
 	private final MaterialRepository materialRepository;
-	private final PostRepository postRepository;
 	private final RawMaterialRepository rawMaterialRepository;
+	private final MaterialSourceRepository materialSourceRepository;
+	private final PostRepository postRepository;
 	private final MaterialMapper materialMapper;
 	private final RawMaterialMapper rawMaterialMapper;
+	private final MaterialSourceMapper materialSourceMapper;
 	private final ObjectMapper objectMapper;
 
 	public AutomationServiceImpl(Cloudinary cloudinary, StatusRepository statusRepository,
 			MaterialRepository materialRepository, PostRepository postRepository,
-			RawMaterialRepository rawMaterialRepository, MaterialMapper materialMapper,
-			RawMaterialMapper rawMaterialMapper, ObjectMapper objectMapper) {
+			RawMaterialRepository rawMaterialRepository, MaterialSourceRepository materialSourceRepository,
+			MaterialMapper materialMapper, RawMaterialMapper rawMaterialMapper, ObjectMapper objectMapper,
+			MaterialSourceMapper materialSourceMapper) {
 		this.cloudinary = cloudinary;
 		this.postRepository = postRepository;
 		this.statusRepository = statusRepository;
 		this.materialRepository = materialRepository;
 		this.rawMaterialRepository = rawMaterialRepository;
+		this.materialSourceRepository = materialSourceRepository;
 		this.materialMapper = materialMapper;
 		this.rawMaterialMapper = rawMaterialMapper;
 		this.objectMapper = objectMapper;
+		this.materialSourceMapper = materialSourceMapper;
 	}
 
 	@Override
+	@Transactional(readOnly = true)
 	public Page<MaterialResponseDTO> getAllMaterials(Pageable pageable) {
 		return materialRepository.findAll(pageable).map(materialMapper::toResponse);
 	}
 
 	@Override
+	@Transactional(readOnly = true)
 	public MaterialResponseDTO getMaterialById(String taskId) {
 		Material material = materialRepository.findById(taskId)
 				.orElseThrow(() -> new PostNotFoundException("Material not found with taskId: " + taskId));
@@ -73,23 +83,32 @@ public class AutomationServiceImpl implements AutomationService {
 	}
 
 	@Override
+	@Transactional(readOnly = true)
 	public List<RawMaterialResponseDTO> getRawMaterialsContentByMaterialId(String taskId) {
 
 		Material material = materialRepository.findById(taskId)
 				.orElseThrow(() -> new PostNotFoundException("Material not found with taskId: " + taskId));
 
-		List<String> rawMaterialIds = material.getRawMaterialIds();
+		List<MaterialSource> sourceLogs = material.getSourceLogs();
 
-		if (rawMaterialIds == null || rawMaterialIds.isEmpty()) {
+		if (sourceLogs.isEmpty()) {
 			return List.of();
 		}
 
-		List<RawMaterial> rawMaterials = rawMaterialRepository.findAllByIdIn(rawMaterialIds);
+		List<RawMaterial> rawMaterials = sourceLogs.stream()
+				.filter(source -> "SUCCESS".equalsIgnoreCase(source.getStatus()))
+				.filter(source -> source.getRawMaterial() != null).map(MaterialSource::getRawMaterial)
+				.collect(Collectors.toList());
+
+		if (rawMaterials.isEmpty()) {
+			return List.of();
+		}
 
 		return rawMaterials.stream().map(rawMaterialMapper::toResponse).collect(Collectors.toList());
 	}
 
 	@Override
+	@Transactional(readOnly = true)
 	public RawMaterialResponseDTO getRawMaterialContentById(String rawMaterialId) {
 		RawMaterial rawMaterial = rawMaterialRepository.findById(rawMaterialId).orElseThrow(
 				() -> new RawMaterialNotFoundException("Raw Material not found with id: " + rawMaterialId));
@@ -107,6 +126,16 @@ public class AutomationServiceImpl implements AutomationService {
 		rawMaterial.setContent(updateDTO.content());
 
 		RawMaterial updatedRawMaterial = rawMaterialRepository.save(rawMaterial);
+
+		if (updateDTO.content() != null && !updateDTO.content().trim().isEmpty()) {
+			materialSourceRepository.findByRawMaterialId(rawMaterialId).ifPresent(materialSource -> {
+
+				if ("FAILED".equalsIgnoreCase(materialSource.getStatus())) {
+					materialSource.setStatus("SUCCESS");
+					materialSourceRepository.save(materialSource);
+				}
+			});
+		}
 
 		return rawMaterialMapper.toFullResponse(updatedRawMaterial);
 	}
@@ -146,20 +175,25 @@ public class AutomationServiceImpl implements AutomationService {
 		Material material = materialRepository.findById(taskId)
 				.orElseThrow(() -> new PostNotFoundException("Material not found with taskId: " + taskId));
 
-		List<String> rawMaterialIds = material.getRawMaterialIds();
+		List<MaterialSource> sourceLogs = material.getSourceLogs();
 
-		List<RawMaterial> filteredRawMaterials = rawMaterialRepository.findAllById(rawMaterialIds);
+		if (sourceLogs == null || sourceLogs.isEmpty()) {
+			return "";
+		}
+
+		List<MaterialSource> allSourceLogs = sourceLogs.stream().collect(Collectors.toList());
+
+		if (allSourceLogs.isEmpty()) {
+			return "";
+		}
 
 		switch (format.toLowerCase()) {
 		case "csv":
-			return formatToCsv(filteredRawMaterials);
-
+			return formatToCsvForSourceLogs(allSourceLogs);
 		case "json":
-			return formatToJson(filteredRawMaterials);
-
+			return formatToJsonForSourceLogs(allSourceLogs);
 		case "txt":
-			return formatToTxt(filteredRawMaterials);
-
+			return formatToTxtForSourceLogs(allSourceLogs);
 		default:
 			throw new IllegalArgumentException("Formato de exportação inválido: " + format);
 		}
@@ -219,18 +253,19 @@ public class AutomationServiceImpl implements AutomationService {
 		postRepository.save(post);
 	}
 
-	private String formatToCsv(List<RawMaterial> rawMaterials) {
-		String csvHeader = "ID,URL,Content_Preview,CreatedAt\n";
-		String csvBody = rawMaterials.stream()
-				.map(rm -> String.format("\"%s\",\"%s\",\"%s\",\"%s\"", rm.getId(), rm.getUrl(),
-						rawMaterialMapper.truncateContent(rm.getContent()), rm.getCreatedAt()))
+	private String formatToCsvForSourceLogs(List<MaterialSource> sourceLogs) {
+		String csvHeader = "ID,URL,Status,RawMaterialId,CreatedAt\n";
+		String csvBody = sourceLogs.stream()
+				.map(source -> String.format("\"%s\",\"%s\",\"%s\",\"%s\",\"%s\"", source.getId(), source.getUrl(),
+						source.getStatus(), source.getRawMaterial() != null ? source.getRawMaterial().getId() : "N/A",
+						source.getCreatedAt()))
 				.collect(Collectors.joining("\n"));
 		return csvHeader + csvBody;
 	}
 
-	private String formatToJson(List<RawMaterial> rawMaterials) {
-		List<?> responseDtos = rawMaterials.stream().map(rawMaterialMapper::toFullResponse)
-				.collect(Collectors.toList());
+	private String formatToJsonForSourceLogs(List<MaterialSource> sourceLogs) {
+
+		List<?> responseDtos = sourceLogs.stream().map(materialSourceMapper::toDto).collect(Collectors.toList());
 
 		try {
 			return objectMapper.writeValueAsString(responseDtos);
@@ -239,10 +274,10 @@ public class AutomationServiceImpl implements AutomationService {
 		}
 	}
 
-	private String formatToTxt(List<RawMaterial> rawMaterials) {
-		return rawMaterials.stream()
-				.map(rm -> "ID: " + rm.getId() + "\nURL: " + rm.getUrl() + "\nContent:\n" + rm.getContent() + "\n---\n")
+	private String formatToTxtForSourceLogs(List<MaterialSource> sourceLogs) {
+		return sourceLogs.stream()
+				.map(source -> "URL: " + source.getUrl() + "\nStatus: " + source.getStatus() + "\nRawMaterial ID: "
+						+ (source.getRawMaterial() != null ? source.getRawMaterial().getId() : "N/A") + "\n---\n")
 				.collect(Collectors.joining());
 	}
-
 }

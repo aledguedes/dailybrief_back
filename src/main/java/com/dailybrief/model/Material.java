@@ -1,12 +1,20 @@
 package com.dailybrief.model;
 
 import java.time.ZonedDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.Lob;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.Table;
 import lombok.Data;
-import jakarta.persistence.*;
-import com.vladmihalcea.hibernate.type.json.JsonType;
-import org.hibernate.annotations.Type;
 
 @Entity
 @Data
@@ -24,27 +32,22 @@ public class Material {
     @JoinColumn(name = "status_id", nullable = false)
     private Status status;
 
-    @Column(name = "post_id", length = 255)
+    @Column(name = "post_id", length = 36)
     private String postId;
 
-//    @Lob
+    // @Lob
     @Column(name = "theme", columnDefinition = "varchar")
     private String theme;
 
     @Column(name = "content_type", length = 255)
     private String contentType;
 
-    @Type(JsonType.class)
-    @Column(name = "raw_material_ids", columnDefinition = "jsonb")
-    private List<String> rawMaterialIds;
-
     @Lob
     @Column(name = "suggested_image_prompt")
     private String suggestedImagePrompt;
 
-    @Type(JsonType.class)
-    @Column(name = "source_urls", columnDefinition = "jsonb")
-    private List<String> sourceUrls;
+    @OneToMany(mappedBy = "material", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<MaterialSource> sourceLogs = new ArrayList<>();
 
     @Column(name = "created_at", nullable = false)
     private ZonedDateTime createdAt;

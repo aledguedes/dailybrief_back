@@ -5,9 +5,10 @@ import com.dailybrief.dto.MaterialResponseDTO;
 import com.dailybrief.model.Status;
 import org.mapstruct.*;
 
-@Mapper(componentModel = "spring", uses = StatusMapper.class)
+@Mapper(componentModel = "spring", uses = { StatusMapper.class, MaterialSourceMapper.class })
 public interface MaterialMapper {
 
+    @Mapping(target = "sourceMaterials", source = "sourceLogs")
     MaterialResponseDTO toResponse(Material material);
 
     @Named("mapStatusIdToStatus")

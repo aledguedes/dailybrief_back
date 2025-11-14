@@ -1,15 +1,9 @@
--- =========================
--- TABELA DE USUÁRIOS
--- =========================
 CREATE TABLE tbl_users (
     id SERIAL PRIMARY KEY,
     email VARCHAR(255) UNIQUE NOT NULL,
     password VARCHAR(255) NOT NULL
 );
 
--- =========================
--- TABELA DE STATUS
--- =========================
 CREATE TABLE tbl_status (
     id SERIAL PRIMARY KEY,
     name VARCHAR(50) UNIQUE NOT NULL,
@@ -18,9 +12,6 @@ CREATE TABLE tbl_status (
     text_class VARCHAR(50)
 );
 
--- =========================
--- TABELA DE CATEGORIAS
--- =========================
 CREATE TABLE tbl_categories (
     id SERIAL PRIMARY KEY,
     name VARCHAR(100) UNIQUE NOT NULL,
@@ -28,26 +19,18 @@ CREATE TABLE tbl_categories (
     target_audience VARCHAR(50)
 );
 
--- =========================
--- TABELA DE POSTS
--- =========================
 CREATE TABLE tbl_posts (
     id VARCHAR(36) PRIMARY KEY,
     image VARCHAR(255),
     author VARCHAR(255),
-
     category_id INTEGER REFERENCES tbl_categories(id) ON DELETE SET NULL,
     status_id INTEGER REFERENCES tbl_status(id) ON DELETE SET NULL,
-
     published_at TIMESTAMP WITH TIME ZONE,
     read_time VARCHAR(50),
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
--- =========================
--- TABELA DE IMAGENS
--- =========================
 CREATE TABLE tbl_images (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     url VARCHAR(255) NOT NULL,
@@ -55,9 +38,7 @@ CREATE TABLE tbl_images (
     post_id VARCHAR(36) REFERENCES tbl_posts(id) ON DELETE CASCADE
 );
 
--- =========================
--- TABELAS DE CONTEÚDO MULTILÍNGUE
--- =========================
+
 CREATE TABLE tbl_post_title (
     post_id VARCHAR(36),
     lang VARCHAR(10),
@@ -105,9 +86,7 @@ CREATE TABLE tbl_post_tags (
     FOREIGN KEY (post_id) REFERENCES tbl_posts(id) ON DELETE CASCADE
 );
 
--- =========================
--- LOGS DE AÇÕES
--- =========================
+
 CREATE TABLE tbl_logs (
     id SERIAL PRIMARY KEY,
     action VARCHAR(255) NOT NULL,
@@ -115,19 +94,14 @@ CREATE TABLE tbl_logs (
     timestamp TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
--- =========================
--- CONFIGURAÇÕES DE AUTOMAÇÃO (PYTHON)
--- =========================
 CREATE TABLE tbl_automation_configs (
     task_id VARCHAR(36) PRIMARY KEY,
     status_id INTEGER REFERENCES tbl_status(id),
     search_factors JSONB NOT NULL,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
--- =========================
--- MATERIAIS
--- =========================
 CREATE TABLE tbl_materials (
     task_id VARCHAR(36) PRIMARY KEY,
     user_id VARCHAR(255) NOT NULL,
@@ -135,9 +109,7 @@ CREATE TABLE tbl_materials (
     post_id VARCHAR(36),
     theme VARCHAR(500),
     content_type VARCHAR(100),
-    raw_material_ids JSONB,
     suggested_image_prompt TEXT,
-    source_urls JSONB,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
 
@@ -147,21 +119,27 @@ CREATE TABLE tbl_materials (
         ON DELETE SET NULL
 );
 
--- =========================
--- MATÉRIAS BRUTAS (RAW MATERIALS)
--- =========================
 CREATE TABLE tbl_raw_materials (
     id VARCHAR(36) PRIMARY KEY,
     user_id VARCHAR(255) NOT NULL,
     task_id VARCHAR(36) REFERENCES tbl_materials(task_id) ON DELETE CASCADE,
     url TEXT NOT NULL,
-    content TEXT NOT NULL,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+    content TEXT, 
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
--- =========================
--- DADOS INICIAIS
--- =========================
+CREATE TABLE tbl_material_source (
+    id VARCHAR(36) PRIMARY KEY DEFAULT gen_random_uuid(), 
+    task_id VARCHAR(36) NOT NULL REFERENCES tbl_materials(task_id) ON DELETE CASCADE,    
+    url TEXT NOT NULL,    
+    status VARCHAR(50) NOT NULL,
+    raw_material_id VARCHAR(36) REFERENCES tbl_raw_materials(id) ON DELETE SET NULL,
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX idx_material_source_task_id ON tbl_material_source (task_id);
+
 INSERT INTO tbl_users (email, password) VALUES 
 ('admin@dailybrief.com', '$2a$12$7xVaaik7.m2w2ez7.A4sTupvCmIad.wgXSkOPaAlLid44BJfwahUC'),
 ('admin_py@dailybrief.com', '$2a$12$Y.mTzt9L6Jvn/qhyFjREMOha36fs0yp.KSAYrjU1MK74yUaC1F9j2');
